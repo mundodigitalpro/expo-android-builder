@@ -1,0 +1,22 @@
+const { AUTH_TOKEN } = require('../config/constants');
+const logger = require('../utils/logger');
+
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    logger.warn('Missing authorization header', { ip: req.ip });
+    return res.status(401).json({ error: 'Missing authorization header' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+
+  if (token !== AUTH_TOKEN) {
+    logger.warn('Invalid auth token', { ip: req.ip });
+    return res.status(403).json({ error: 'Invalid authentication token' });
+  }
+
+  next();
+};
+
+module.exports = authMiddleware;

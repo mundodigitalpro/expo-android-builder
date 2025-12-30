@@ -1,0 +1,45 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const storage = {
+  async setAuthToken(token) {
+    try {
+      await AsyncStorage.setItem('auth_token', token);
+    } catch (error) {
+      console.error('Error saving auth token:', error);
+    }
+  },
+
+  async getAuthToken() {
+    try {
+      return await AsyncStorage.getItem('auth_token');
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
+  },
+
+  async clearAuthToken() {
+    try {
+      await AsyncStorage.removeItem('auth_token');
+    } catch (error) {
+      console.error('Error clearing auth token:', error);
+    }
+  },
+
+  async setServerUrl(url) {
+    try {
+      await AsyncStorage.setItem('server_url', url);
+    } catch (error) {
+      console.error('Error saving server URL:', error);
+    }
+  },
+
+  async getServerUrl() {
+    try {
+      return await AsyncStorage.getItem('server_url') || 'http://localhost:3001';
+    } catch (error) {
+      console.error('Error getting server URL:', error);
+      return 'http://localhost:3001';
+    }
+  },
+};
