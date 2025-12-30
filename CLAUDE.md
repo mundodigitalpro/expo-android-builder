@@ -4,27 +4,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Expo App Builder Workspace is a mobile development system running on Termux/Android. It consists of two main components that work together:
+Expo Android Builder is a production-ready mobile development system running on Termux/Android, forked from [expo-app-builder-workspace](https://github.com/mundodigitalpro/expo-app-builder-workspace). It consists of two main components that work together:
 
 1. **React Native App** (`/app`): Mobile UI for creating and managing Expo projects
 2. **Node.js Server** (`/server`): Backend API that executes CLI commands and manages projects
 
-This is a **hybrid architecture** where the React Native app communicates with a local Node.js server running on the same device, which then executes Expo CLI commands, Claude Code commands (future), and EAS builds (future).
+This is a **hybrid architecture** where the React Native app communicates with a local Node.js server running on the same device, which then executes Expo CLI commands, Claude Code commands, and EAS builds.
 
 ## Development Environment
 
 **CRITICAL**: This project runs on **Termux on Android**, not a standard development machine. All paths, commands, and configurations are specific to this environment.
 
-- Working directory: `/data/data/com.termux/files/home/expo-app-builder-workspace/`
+- Working directory: `/data/data/com.termux/files/home/expo-android-builder/`
 - Projects are created in: `/data/data/com.termux/files/home/app-builder-projects/`
 - Node.js version: 25.2.1
-- No git repository at workspace root
+- Git repository: https://github.com/mundodigitalpro/expo-android-builder
 
 ## Common Commands
 
 ### 🚀 Quick Start (Recommended - All-in-One)
 ```bash
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 ./start-all-services.sh
 ```
 
@@ -42,13 +42,13 @@ This script:
 # Option 1: Ctrl+C in the terminal where Expo is running (stops everything)
 
 # Option 2: Use the stop script
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 ./stop-all-services.sh
 ```
 
 ### Start Backend Server Only (Advanced)
 ```bash
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 npm start
 # Or: ./start-server.sh
 ```
@@ -57,7 +57,7 @@ The server runs on port 3001.
 
 ### Start React Native App Only (Advanced)
 ```bash
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/app
+cd /data/data/com.termux/files/home/expo-android-builder/app
 npm start
 ```
 
@@ -66,11 +66,11 @@ Scan QR code with Expo Go (recommended) or press `a` if ADB is available.
 ### Install Dependencies
 ```bash
 # Server dependencies
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 npm install
 
 # App dependencies
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/app
+cd /data/data/com.termux/files/home/expo-android-builder/app
 npm install
 ```
 
@@ -344,7 +344,7 @@ No automated test suite yet (planned for Phase 5).
 **Server not responding / App shows "Servidor No Disponible"**:
 ```bash
 # ⭐ RECOMMENDED: Use the unified start script
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 ./start-all-services.sh
 
 # This starts both backend and frontend automatically
@@ -360,7 +360,7 @@ Or from the app:
 **Port 3001 already in use**:
 ```bash
 # Stop all services first
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 ./stop-all-services.sh
 
 # Then restart
@@ -387,7 +387,7 @@ cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
 **Services won't stop**:
 ```bash
 # Use the stop script
-cd /data/data/com.termux/files/home/expo-app-builder-workspace/server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 ./stop-all-services.sh
 
 # Or manually kill processes

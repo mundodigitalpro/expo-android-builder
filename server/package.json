@@ -1,16 +1,16 @@
 {
-  "name": "expo-app-builder-server",
+  "name": "expo-android-builder-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node.js backend server for Expo Android Builder - Production-ready Android development environment",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["expo", "android", "termux", "mobile-development", "eas-build"],
+  "author": "Jose Jordan",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.5",

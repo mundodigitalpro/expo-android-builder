@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-app-builder",
-    "slug": "expo-app-builder",
+    "name": "Expo Android Builder",
+    "slug": "expo-android-builder",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

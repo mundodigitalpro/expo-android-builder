@@ -1,5 +1,5 @@
 {
-  "name": "expo-app-builder",
+  "name": "expo-android-builder",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

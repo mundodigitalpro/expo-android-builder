@@ -1,10 +1,12 @@
-# Expo App Builder Workspace
+# Expo Android Builder
 
-> A mobile development system for creating and managing Expo projects directly from your Android device using Termux.
+> Production-ready Android development environment for building and deploying Expo applications directly from your Android device using Termux.
+
+**Forked from**: [expo-app-builder-workspace](https://github.com/mundodigitalpro/expo-app-builder-workspace)
 
 ## Overview
 
-Expo App Builder Workspace is a comprehensive mobile development environment that runs entirely on Android devices through Termux. It combines a React Native frontend with a Node.js backend to provide a seamless experience for creating, managing, and building Expo projects without needing a traditional development machine.
+Expo Android Builder is a specialized mobile development environment optimized for Android app development on Termux. This project extends the original Expo App Builder Workspace with enhanced features, optimizations, and a focus on production-ready Android application deployment.
 
 ### Key Features
 
@@ -56,8 +58,8 @@ CLI Tools (Expo CLI, Claude Code, EAS CLI)
 1. **Clone the repository**:
 ```bash
 cd ~
-git clone <repository-url> expo-app-builder-workspace
-cd expo-app-builder-workspace
+git clone https://github.com/mundodigitalpro/expo-android-builder.git
+cd expo-android-builder
 ```
 
 2. **Install dependencies**:
@@ -132,7 +134,7 @@ Access **Settings** to configure:
 ## Project Structure
 
 ```
-expo-app-builder-workspace/
+expo-android-builder/
 ├── app/                      # React Native application
 │   ├── screens/              # App screens (Home, Settings, etc.)
 │   ├── services/             # API client and utilities
@@ -218,13 +220,13 @@ The app will automatically detect if the server is offline and display instructi
 
 Or manually:
 ```bash
-cd ~/expo-app-builder-workspace/server
+cd ~/expo-android-builder/server
 ./start-all-services.sh
 ```
 
 ### Port Already in Use
 ```bash
-cd ~/expo-app-builder-workspace/server
+cd ~/expo-android-builder/server
 ./stop-all-services.sh
 ./start-all-services.sh
 ```
