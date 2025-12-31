@@ -1,8 +1,8 @@
 # Índice de Documentación - Expo App Builder
 
 **Proyecto**: Expo App Builder con Claude Code
-**Fecha**: 29 de Diciembre, 2024
-**Estado**: Fase 1 Completada ✅
+**Fecha**: 30 de Diciembre, 2024
+**Estado**: Migración a Cloud en Planificación 🚀
 
 ---
 
@@ -68,11 +68,30 @@ cat /data/data/com.termux/files/home/GUIA_DESARROLLADOR.md
 cat /data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md
 ```
 
+#### 4. **PLAN_MIGRACION_CLOUD.md** ⭐ NUEVO
+**Para**: Plan de migración a arquitectura cloud multi-usuario
+**Contenido**:
+- Transformación arquitectónica (localhost → cloud)
+- 6 fases de implementación (9-12 semanas)
+- Backend: PostgreSQL + JWT + Multi-usuario
+- Cloud deployment: Railway/Render
+- Frontend: Login/Register + APK standalone
+- Security hardening + Job queues
+- Stack tecnológico completo
+- Timeline detallado
+- Riesgos y mitigaciones
+
+**Leer primero si**: Vas a implementar la versión cloud del proyecto
+
+```bash
+cat docs/PLAN_MIGRACION_CLOUD.md
+```
+
 ---
 
 ### ✅ Testing y Resultados
 
-#### 4. **REPORTE_PRUEBAS.md**
+#### 5. **REPORTE_PRUEBAS.md**
 **Para**: Ver resultados de las pruebas realizadas
 **Contenido**:
 - 9 tests ejecutados (todos exitosos)
@@ -94,7 +113,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 
 ### 📖 READMEs de Código
 
-#### 5. **projects/expo-app-builder/README.md**
+#### 6. **projects/expo-app-builder/README.md**
 **Para**: Documentación de la app React Native
 **Contenido**:
 - Instalación de la app
@@ -107,7 +126,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 cat /data/data/com.termux/files/home/projects/expo-app-builder/README.md
 ```
 
-#### 6. **expo-app-builder-server/README.md**
+#### 7. **expo-app-builder-server/README.md**
 **Para**: Documentación del servidor Node.js
 **Contenido**:
 - Instalación del servidor
@@ -240,11 +259,12 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 | INICIO_RAPIDO.md | ~5 | Guía de usuario | Usuarios finales |
 | GUIA_DESARROLLADOR.md | ~25 | Onboarding dev | Desarrolladores ⭐ |
 | EXPO_APP_BUILDER_PLAN.md | ~15 | Plan técnico | Dev + PMs |
+| PLAN_MIGRACION_CLOUD.md | ~35 | Migración cloud | Dev + Arquitectos ⭐ |
 | REPORTE_PRUEBAS.md | ~10 | Testing results | QA + Devs |
 | README.md (server) | ~3 | Docs backend | Backend devs |
 | README.md (app) | ~3 | Docs frontend | Frontend devs |
 
-**Total de documentación**: ~60 páginas 📚
+**Total de documentación**: ~95 páginas 📚
 
 ---
 
@@ -269,9 +289,9 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 
 ---
 
-**Última actualización**: 29 de Diciembre, 2024
+**Última actualización**: 30 de Diciembre, 2024
 **Mantenido por**: Claude Code
-**Versión del índice**: 1.0
+**Versión del índice**: 1.1
 
 ---
 
