@@ -1,27 +1,57 @@
-# Estado del Desarrollo - Expo App Builder
-**Fecha:** 30 de Diciembre 2024
-**Última actualización:** 19:00
+# Estado del Desarrollo - Expo Android Builder
+**Fecha:** 31 de Diciembre 2024
+**Última actualización:** 14:00
 **Desarrollador:** josejordandev
 **Entorno:** Termux/Android
 
 ---
 
-## 🚀 NUEVA FASE: Migración a Cloud Multi-Usuario
+## 🚀 FASE ACTUAL: Preparación para Migración a Cloud (VPS Hetzner)
 
-**Estado actual:** Proyecto forked y plan de migración completado
+**Estado actual:** ✅ Plan de migración actualizado y optimizado para VPS propio
 
 - **Repositorio original:** [expo-app-builder-workspace](https://github.com/mundodigitalpro/expo-app-builder-workspace)
-- **Nuevo repositorio:** [expo-android-builder](https://github.com/mundodigitalpro/expo-android-builder)
-- **Plan de migración:** `docs/PLAN_MIGRACION_CLOUD.md` (35 páginas, 6 fases)
-- **Duración estimada:** 9-12 semanas
-- **Objetivo:** App Android standalone con backend cloud multi-usuario
+- **Repositorio actual:** [expo-android-builder](https://github.com/mundodigitalpro/expo-android-builder)
+- **Plan de migración:** `docs/PLAN_MIGRACION_CLOUD.md` (actualizado 31 Dic 2024)
+- **Duración estimada:** 8-11 semanas (reducido con VPS ya funcionando)
+- **Objetivo:** App Android standalone con backend en VPS Hetzner multi-usuario
+
+### Decisión arquitectónica importante (31 Dic 2024):
+🎯 **Cambio de Railway/EAS Cloud a VPS Hetzner propio**
+
+**Ventajas del nuevo enfoque:**
+- 💰 **Costo reducido**: €6-10/mes (vs $29/mes EAS Cloud)
+- 🔧 **Control total**: Android SDK instalado, builds ilimitados
+- 🚀 **Independencia**: No dependes de servicios externos para builds
+- 📦 **Datos propios**: Proyectos y APKs bajo tu control completo
 
 ### Cambios arquitectónicos planificados:
 - ❌ **Eliminar:** Dependencia de Termux para usuarios finales
-- ✅ **Agregar:** Backend cloud (Railway/Render)
-- ✅ **Agregar:** PostgreSQL + autenticación JWT
-- ✅ **Agregar:** Multi-usuario con aislamiento de proyectos
+- ❌ **Eliminar:** Dependencia de EAS Cloud para builds
+- ✅ **Agregar:** Backend en VPS Hetzner (Ubuntu 22.04)
+- ✅ **Agregar:** Nginx + SSL (Let's Encrypt)
+- ✅ **Agregar:** PostgreSQL + Redis locales en VPS
+- ✅ **Agregar:** Android SDK en VPS para builds locales
+- ✅ **Agregar:** Multi-usuario con autenticación JWT
+- ✅ **Agregar:** Builds ilimitados sin restricciones de quota
 - ✅ **Agregar:** APK standalone firmado
+
+### Flujo de trabajo decidido:
+📋 **Desarrollo híbrido**: Local (Termux) + Deploy (VPS)
+
+```
+Termux (Local)           GitHub              VPS Hetzner
+─────────────            ──────              ───────────
+Desarrollo     ──push──> Repo    ──pull──>  Production
+Testing local            Control             Deployment
+Claude Code              Versiones           Builds Android
+```
+
+**Ventajas:**
+- Desarrollo cómodo en Termux (donde ya está todo configurado)
+- Claude Code funcionando perfectamente
+- VPS solo para producción y builds
+- Git maneja sincronización automáticamente
 
 ---
 
@@ -440,6 +470,30 @@ expo-app-builder-workspace/
 
 ## Changelog
 
+### 31 Diciembre 2024 - 14:00
+- 🎯 **DECISIÓN ARQUITECTÓNICA:** Migración a VPS Hetzner propio
+  - Plan de migración completamente rediseñado para usar VPS en lugar de Railway
+  - Builds locales con Android SDK en VPS en lugar de EAS Cloud
+  - Reducción de costos: €6-10/mes vs $29/mes EAS Cloud
+  - Configuración completa de Nginx, PostgreSQL, Redis en VPS
+  - Instrucciones detalladas para Android SDK en Ubuntu
+  - Nuevo BuildService.js para builds locales con expo build:android
+  - Endpoints API para iniciar/monitorear/descargar builds
+  - Job Queue con Bull para gestión de builds concurrentes
+  - Timeline optimizado: 8-11 semanas (vs 9-12 semanas originales)
+- 📋 **FLUJO DE TRABAJO:** Decidido modelo híbrido
+  - Desarrollo local en Termux (donde ya funciona todo)
+  - Deploy a VPS vía Git (push → pull)
+  - VPS solo para producción y builds de Android
+  - Claude Code sigue funcionando en Termux
+- 📄 **DOCUMENTACIÓN:** Actualizado PLAN_MIGRACION_CLOUD.md
+  - +604 líneas, -151 líneas
+  - FASE 2 completamente reescrita para VPS
+  - FASE 4 ahora cubre builds locales (no EAS)
+  - Arquitectura actualizada con diagramas VPS
+  - Stack tecnológico actualizado
+  - Commit: 107eb65 y pusheado a GitHub
+
 ### 30 Diciembre 2024 - 14:50
 - ✨ **Nuevo:** Sistema de auto-inicio de servicios
   - Script unificado `start-all-services.sh` inicia backend + frontend
@@ -467,6 +521,56 @@ expo-app-builder-workspace/
 
 ---
 
+## 📍 Próximos Pasos para Continuar
+
+### Opción 1: Empezar Migración a Cloud (Recomendado)
+
+**Objetivo:** Implementar FASE 1 del plan de migración (Backend Auth & DB)
+
+**Pasos:**
+1. **Preparar VPS** (si aún no está completo):
+   ```bash
+   ssh tu-usuario@tu-vps-ip
+   # Seguir pasos de FASE 2.2 en PLAN_MIGRACION_CLOUD.md
+   ```
+
+2. **Desarrollar localmente en Termux**:
+   - Crear modelos Sequelize (User, Project)
+   - Implementar AuthService con JWT
+   - Crear endpoints /auth/register y /auth/login
+   - Modificar auth middleware
+
+3. **Probar localmente** antes de deploy
+
+4. **Deploy al VPS**:
+   ```bash
+   git push
+   ssh tu-vps # y hacer git pull
+   ```
+
+**Referencia:** `docs/PLAN_MIGRACION_CLOUD.md` - FASE 1 y FASE 2
+
+### Opción 2: Continuar con Fase 4 (UI Refinement)
+
+**Objetivo:** Mejorar la interfaz de usuario antes de migrar
+
+**Tareas pendientes:**
+- Implementar dark mode
+- Mejorar diseño visual de pantallas
+- Añadir animaciones y transiciones
+
+**Referencia:** Ver sección "Phase 4: UI Refinement" arriba
+
+### Recomendación:
+
+🎯 **Empezar con migración a cloud (Opción 1)** porque:
+- El plan ya está completo y actualizado
+- El VPS está parcialmente configurado
+- La funcionalidad actual ya funciona bien (Fase 1-3 completadas)
+- UI refinement puede hacerse después en producción
+
+---
+
 **Estado general:** 🟢 **EXCELENTE** - 3 de 5 fases completadas
 
-**Próximo paso:** Phase 4 - UI Refinement 🎨
+**Próximo paso:** Implementar FASE 1 del plan de migración (Backend Auth & DB) 🔐
