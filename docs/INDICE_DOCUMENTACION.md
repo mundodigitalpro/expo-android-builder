@@ -1,8 +1,8 @@
 # Índice de Documentación - Expo App Builder
 
 **Proyecto**: Expo App Builder con Claude Code
-**Fecha**: 30 de Diciembre, 2024
-**Estado**: Migración a Cloud en Planificación 🚀
+**Fecha**: 31 de Diciembre, 2024
+**Estado**: MVP para VPS Privado en Desarrollo 🚀
 
 ---
 
@@ -68,30 +68,45 @@ cat /data/data/com.termux/files/home/GUIA_DESARROLLADOR.md
 cat /data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md
 ```
 
-#### 4. **PLAN_MIGRACION_CLOUD.md** ⭐ NUEVO
-**Para**: Plan de migración a arquitectura cloud multi-usuario
+#### 4. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
+**Para**: Implementar builds de Android en VPS propio (uso privado)
 **Contenido**:
-- Transformación arquitectónica (localhost → cloud)
-- 6 fases de implementación (9-12 semanas)
-- Backend: PostgreSQL + JWT + Multi-usuario
-- Cloud deployment: Railway/Render
-- Frontend: Login/Register + APK standalone
-- Security hardening + Job queues
-- Stack tecnológico completo
-- Timeline detallado
-- Riesgos y mitigaciones
+- Arquitectura simplificada (sin sobreingeniería)
+- 4 fases de implementación (3-5 días)
+- VPS Hetzner + Node.js + PM2
+- Android SDK para builds locales
+- Nginx + Let's Encrypt
+- Sin PostgreSQL, Redis, JWT multi-usuario
+- Costo: ~€6/mes
 
-**Leer primero si**: Vas a implementar la versión cloud del proyecto
+**Leer primero si**: Quieres hacer builds de Android en tu propio VPS
 
 ```bash
-cat docs/PLAN_MIGRACION_CLOUD.md
+cat docs/PLAN_MVP_VPS.md
+```
+
+#### 5. **PLAN_MULTIUSUARIO_FUTURO.md** (Para Play Store)
+**Para**: Plan completo multi-usuario para publicar en Play Store
+**Contenido**:
+- Transformación arquitectónica completa
+- 6 fases de implementación (8-11 semanas)
+- Backend: PostgreSQL + Sequelize + JWT
+- Redis + Bull Queues
+- Multi-usuario con autenticación
+- Security hardening
+- Rate limiting
+
+**Leer primero si**: Vas a publicar la app en Play Store
+
+```bash
+cat docs/PLAN_MULTIUSUARIO_FUTURO.md
 ```
 
 ---
 
 ### ✅ Testing y Resultados
 
-#### 5. **REPORTE_PRUEBAS.md**
+#### 6. **REPORTE_PRUEBAS.md**
 **Para**: Ver resultados de las pruebas realizadas
 **Contenido**:
 - 9 tests ejecutados (todos exitosos)
@@ -113,7 +128,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 
 ### 📖 READMEs de Código
 
-#### 6. **projects/expo-app-builder/README.md**
+#### 7. **projects/expo-app-builder/README.md**
 **Para**: Documentación de la app React Native
 **Contenido**:
 - Instalación de la app
@@ -126,7 +141,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 cat /data/data/com.termux/files/home/projects/expo-app-builder/README.md
 ```
 
-#### 7. **expo-app-builder-server/README.md**
+#### 8. **expo-app-builder-server/README.md**
 **Para**: Documentación del servidor Node.js
 **Contenido**:
 - Instalación del servidor
@@ -259,12 +274,13 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 | INICIO_RAPIDO.md | ~5 | Guía de usuario | Usuarios finales |
 | GUIA_DESARROLLADOR.md | ~25 | Onboarding dev | Desarrolladores ⭐ |
 | EXPO_APP_BUILDER_PLAN.md | ~15 | Plan técnico | Dev + PMs |
-| PLAN_MIGRACION_CLOUD.md | ~35 | Migración cloud | Dev + Arquitectos ⭐ |
+| PLAN_MVP_VPS.md | ~10 | MVP uso privado | Dev ⭐ |
+| PLAN_MULTIUSUARIO_FUTURO.md | ~35 | Multi-usuario futuro | Dev + Arquitectos |
 | REPORTE_PRUEBAS.md | ~10 | Testing results | QA + Devs |
 | README.md (server) | ~3 | Docs backend | Backend devs |
 | README.md (app) | ~3 | Docs frontend | Frontend devs |
 
-**Total de documentación**: ~95 páginas 📚
+**Total de documentación**: ~105 páginas 📚
 
 ---
 
@@ -289,9 +305,9 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 
 ---
 
-**Última actualización**: 30 de Diciembre, 2024
-**Mantenido por**: Claude Code
-**Versión del índice**: 1.1
+**Última actualización**: 31 de Diciembre, 2024
+**Mantenido por**: Claude Code / Gemini
+**Versión del índice**: 1.2
 
 ---
 

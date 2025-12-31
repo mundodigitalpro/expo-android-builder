@@ -1,40 +1,36 @@
 # Estado del Desarrollo - Expo Android Builder
 **Fecha:** 31 de Diciembre 2024
-**Última actualización:** 14:00
+**Última actualización:** 19:08
 **Desarrollador:** josejordandev
 **Entorno:** Termux/Android
 
 ---
 
-## 🚀 FASE ACTUAL: Preparación para Migración a Cloud (VPS Hetzner)
+## 🚀 FASE ACTUAL: MVP para VPS Privado (Simplificado)
 
-**Estado actual:** ✅ Plan de migración actualizado y optimizado para VPS propio
+**Estado actual:** ✅ Plan MVP simplificado listo - Sin sobreingeniería
 
 - **Repositorio original:** [expo-app-builder-workspace](https://github.com/mundodigitalpro/expo-app-builder-workspace)
 - **Repositorio actual:** [expo-android-builder](https://github.com/mundodigitalpro/expo-android-builder)
-- **Plan de migración:** `docs/PLAN_MIGRACION_CLOUD.md` (actualizado 31 Dic 2024)
-- **Duración estimada:** 8-11 semanas (reducido con VPS ya funcionando)
-- **Objetivo:** App Android standalone con backend en VPS Hetzner multi-usuario
+- **Plan MVP (uso privado):** `docs/PLAN_MVP_VPS.md` ⭐ (3-5 días)
+- **Plan multi-usuario (futuro):** `docs/PLAN_MULTIUSUARIO_FUTURO.md` (8-11 semanas)
+- **Objetivo actual:** Builds de Android en VPS propio para uso privado
 
-### Decisión arquitectónica importante (31 Dic 2024):
-🎯 **Cambio de Railway/EAS Cloud a VPS Hetzner propio**
+### Decisión arquitectónica importante (31 Dic 2024 - 19:08):
+🎯 **MVP Simplificado para uso privado - Sin sobreingeniería**
 
-**Ventajas del nuevo enfoque:**
-- 💰 **Costo reducido**: €6-10/mes (vs $29/mes EAS Cloud)
-- 🔧 **Control total**: Android SDK instalado, builds ilimitados
-- 🚀 **Independencia**: No dependes de servicios externos para builds
-- 📦 **Datos propios**: Proyectos y APKs bajo tu control completo
+**Enfoque MVP (eliminado del plan inicial):**
+- ❌ PostgreSQL + Sequelize → Usar filesystem (ya funciona)
+- ❌ Redis + Bull Queues → No hay builds concurrentes
+- ❌ JWT multi-usuario → Mantener token simple
+- ❌ Rate limiting avanzado → VPS privado
 
-### Cambios arquitectónicos planificados:
-- ❌ **Eliminar:** Dependencia de Termux para usuarios finales
-- ❌ **Eliminar:** Dependencia de EAS Cloud para builds
-- ✅ **Agregar:** Backend en VPS Hetzner (Ubuntu 22.04)
-- ✅ **Agregar:** Nginx + SSL (Let's Encrypt)
-- ✅ **Agregar:** PostgreSQL + Redis locales en VPS
-- ✅ **Agregar:** Android SDK en VPS para builds locales
-- ✅ **Agregar:** Multi-usuario con autenticación JWT
-- ✅ **Agregar:** Builds ilimitados sin restricciones de quota
-- ✅ **Agregar:** APK standalone firmado
+**Mantenido para MVP:**
+- ✅ VPS Hetzner (Ubuntu 22.04)
+- ✅ Node.js + PM2
+- ✅ Android SDK para builds locales
+- ✅ Nginx + Let's Encrypt
+- ✅ Backend actual SIN cambios
 
 ### Flujo de trabajo decidido:
 📋 **Desarrollo híbrido**: Local (Termux) + Deploy (VPS)
@@ -486,12 +482,18 @@ expo-app-builder-workspace/
   - Deploy a VPS vía Git (push → pull)
   - VPS solo para producción y builds de Android
   - Claude Code sigue funcionando en Termux
-- 📄 **DOCUMENTACIÓN:** Actualizado PLAN_MIGRACION_CLOUD.md
-  - +604 líneas, -151 líneas
-  - FASE 2 completamente reescrita para VPS
-  - FASE 4 ahora cubre builds locales (no EAS)
-  - Arquitectura actualizada con diagramas VPS
-  - Stack tecnológico actualizado
+- 📄 **DOCUMENTACIÓN:** Reorganizado planes de migración
+  - Creado `PLAN_MVP_VPS.md` - Plan simplificado para uso privado (3-5 días)
+  - Renombrado `PLAN_MIGRACION_CLOUD.md` → `PLAN_MULTIUSUARIO_FUTURO.md`
+  - Eliminada sobreingeniería del MVP (PostgreSQL, Redis, JWT multi-usuario)
+  - Actualizado `INDICE_DOCUMENTACION.md` con nuevas referencias
+  - Commit: dd46282 y pusheado a GitHub
+
+### 31 Diciembre 2024 - 14:00
+- 🎯 **DECISIÓN ARQUITECTÓNICA:** Migración a VPS Hetzner propio
+  - Plan de migración completamente rediseñado para usar VPS en lugar de Railway
+  - Builds locales con Android SDK en VPS en lugar de EAS Cloud
+  - Reducción de costos: €6-10/mes vs $29/mes EAS Cloud
   - Commit: 107eb65 y pusheado a GitHub
 
 ### 30 Diciembre 2024 - 14:50
@@ -523,54 +525,56 @@ expo-app-builder-workspace/
 
 ## 📍 Próximos Pasos para Continuar
 
-### Opción 1: Empezar Migración a Cloud (Recomendado)
+### Opción 1: Implementar MVP en VPS (Recomendado) ⭐
 
-**Objetivo:** Implementar FASE 1 del plan de migración (Backend Auth & DB)
+**Objetivo:** Hacer builds de Android en tu VPS propio (3-5 días)
 
 **Pasos:**
-1. **Preparar VPS** (si aún no está completo):
+1. **Preparar VPS:**
    ```bash
    ssh tu-usuario@tu-vps-ip
-   # Seguir pasos de FASE 2.2 en PLAN_MIGRACION_CLOUD.md
+   # Seguir FASE 1 en PLAN_MVP_VPS.md
    ```
 
-2. **Desarrollar localmente en Termux**:
-   - Crear modelos Sequelize (User, Project)
-   - Implementar AuthService con JWT
-   - Crear endpoints /auth/register y /auth/login
-   - Modificar auth middleware
-
-3. **Probar localmente** antes de deploy
-
-4. **Deploy al VPS**:
+2. **Deploy backend al VPS:**
    ```bash
-   git push
-   ssh tu-vps # y hacer git pull
+   git clone https://github.com/mundodigitalpro/expo-android-builder.git
+   cd expo-android-builder/server
+   npm install
+   pm2 start server.js
    ```
 
-**Referencia:** `docs/PLAN_MIGRACION_CLOUD.md` - FASE 1 y FASE 2
+3. **Configurar Nginx + SSL**
 
-### Opción 2: Continuar con Fase 4 (UI Refinement)
+4. **Crear LocalBuildService.js**
 
-**Objetivo:** Mejorar la interfaz de usuario antes de migrar
+**Referencia:** `docs/PLAN_MVP_VPS.md`
 
-**Tareas pendientes:**
-- Implementar dark mode
-- Mejorar diseño visual de pantallas
-- Añadir animaciones y transiciones
+### Opción 2: Plan Multi-Usuario (Futuro - Play Store)
 
-**Referencia:** Ver sección "Phase 4: UI Refinement" arriba
+**Objetivo:** Preparar la app para múltiples usuarios y Play Store
+
+**Duración:** 8-11 semanas
+
+**Incluye:**
+- PostgreSQL + Sequelize
+- JWT multi-usuario
+- Redis + Bull Queues
+- Rate limiting
+- Security hardening
+
+**Referencia:** `docs/PLAN_MULTIUSUARIO_FUTURO.md`
 
 ### Recomendación:
 
-🎯 **Empezar con migración a cloud (Opción 1)** porque:
-- El plan ya está completo y actualizado
-- El VPS está parcialmente configurado
-- La funcionalidad actual ya funciona bien (Fase 1-3 completadas)
-- UI refinement puede hacerse después en producción
+🎯 **Empezar con MVP (Opción 1)** porque:
+- Solo 3-5 días vs 8-11 semanas
+- Sin sobreingeniería
+- Backend actual funciona sin cambios
+- Puedes hacer builds de Android para ti mismo rápidamente
 
 ---
 
 **Estado general:** 🟢 **EXCELENTE** - 3 de 5 fases completadas
 
-**Próximo paso:** Implementar FASE 1 del plan de migración (Backend Auth & DB) 🔐
+**Próximo paso:** Implementar MVP en VPS (FASE 1 de PLAN_MVP_VPS.md) 🚀
