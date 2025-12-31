@@ -26,26 +26,40 @@
 └─────────────────────────────────┘
 ```
 
-### Arquitectura Objetivo (Cloud Multi-Usuario)
+### Arquitectura Objetivo (Cloud Multi-Usuario con VPS Hetzner)
 ```
-┌──────────────┐         ┌─────────────────────────────┐
-│ Standalone   │ HTTPS   │  Cloud Backend              │
-│ APK          │────────→│  (Railway/Render/AWS)       │
-│              │  WSS    │  ┌──────────────────────┐   │
-│ Auth: JWT    │         │  │ Node.js + Socket.io  │   │
-│ User: UUID   │         │  └──────┬───────────────┘   │
-└──────────────┘         │         ↓                    │
-                         │  ┌──────────────────────┐   │
-                         │  │ PostgreSQL/MongoDB   │   │
-                         │  │ - Users              │   │
-                         │  │ - Projects (por user)│   │
-                         │  │ - Builds             │   │
-                         │  └──────────────────────┘   │
-                         │  ┌──────────────────────┐   │
-                         │  │ CLI Tools            │   │
-                         │  │ Storage: S3 o FS     │   │
-                         │  └──────────────────────┘   │
-                         └─────────────────────────────┘
+┌──────────────┐         ┌─────────────────────────────────────┐
+│ Standalone   │ HTTPS   │  Hetzner VPS                        │
+│ APK          │────────→│  (Ubuntu 22.04 LTS)                 │
+│              │  WSS    │                                     │
+│ Auth: JWT    │         │  ┌─────────────────────────┐        │
+│ User: UUID   │         │  │ Nginx (Reverse Proxy)   │        │
+└──────────────┘         │  │ + SSL (Let's Encrypt)   │        │
+                         │  └──────────┬──────────────┘        │
+                         │             ↓                        │
+                         │  ┌──────────────────────┐           │
+                         │  │ Node.js + Socket.io  │           │
+                         │  │ (PM2 process manager)│           │
+                         │  └──────┬───────────────┘           │
+                         │         ↓                            │
+                         │  ┌──────────────────────┐           │
+                         │  │ PostgreSQL           │           │
+                         │  │ - Users              │           │
+                         │  │ - Projects (por user)│           │
+                         │  │ - Builds             │           │
+                         │  └──────────────────────┘           │
+                         │  ┌──────────────────────┐           │
+                         │  │ Redis (Bull Queues)  │           │
+                         │  │ - Build jobs         │           │
+                         │  │ - Project creation   │           │
+                         │  └──────────────────────┘           │
+                         │  ┌──────────────────────┐           │
+                         │  │ Android SDK          │           │
+                         │  │ - expo build:android │           │
+                         │  │ - Local builds       │           │
+                         │  │ Storage: Filesystem  │           │
+                         │  └──────────────────────┘           │
+                         └─────────────────────────────────────┘
 ```
 
 **Cambios clave**:
@@ -180,45 +194,134 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 ---
 
-### **FASE 2: Cloud Deployment** (1-2 semanas)
+### **FASE 2: Deployment en Hetzner VPS** (1 semana)
 
-#### 2.1 Plataforma de Deployment
+#### 2.1 Configuración del VPS
 
-**Recomendación**: Railway (opción más fácil)
+**Plataforma**: Hetzner VPS (servidor dedicado propio)
 
-**Alternativas**:
-- Render (tier gratuito disponible)
-- AWS EC2 + RDS (más control, más complejo)
-- DigitalOcean App Platform (balance)
+**Ventajas de usar VPS propio**:
+- Control total del servidor y builds
+- Mejor costo (€5-10/mes vs $29/mes EAS)
+- Builds ilimitados sin restricciones
+- No depender de servicios externos
+- Datos y proyectos bajo tu control
+- Ubicación en Europa (buena latencia)
 
-**Por qué Railway**:
-- PostgreSQL incluido
-- Variables de entorno fáciles
-- HTTPS/WSS automático
-- Deploy desde Git
-- ~$20/mes
+**Requisitos del VPS**:
+- **CPU**: 2-4 vCPUs (para builds de Android)
+- **RAM**: 4-8GB (builds requieren memoria)
+- **Storage**: 40-80GB SSD
+- **OS**: Ubuntu 22.04 LTS
+- **Ancho de banda**: Suficiente para descargas de APK
 
-#### 2.2 Configuración de Deployment
+#### 2.2 Dependencias del Sistema
 
-**Crear archivos**:
+**Verificar/Instalar Node.js**:
+```bash
+# Verificar versión (necesitas Node 18+)
+node -v
 
-1. **`server/railway.json`**:
-```json
-{
-  "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install"
-  },
-  "deploy": {
-    "startCommand": "npm start",
-    "restartPolicyType": "ON_FAILURE"
-  }
-}
+# Si no está instalado o versión antigua:
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
 ```
 
-2. **`server/Procfile`** (alternativa):
+**Instalar PostgreSQL** (si no lo tienes):
+```bash
+sudo apt install -y postgresql postgresql-contrib
+
+# Crear base de datos
+sudo -u postgres psql
+CREATE DATABASE expo_builder;
+CREATE USER expo_user WITH PASSWORD 'tu-password-segura';
+GRANT ALL PRIVILEGES ON DATABASE expo_builder TO expo_user;
+\q
 ```
-web: npm start
+
+**Instalar Redis** (para job queues):
+```bash
+sudo apt install -y redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+```
+
+**Instalar Nginx** (reverse proxy):
+```bash
+sudo apt install -y nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+
+**Instalar PM2** (process manager para Node.js):
+```bash
+sudo npm install -g pm2
+```
+
+#### 2.3 Configurar Android SDK en VPS
+
+**Para hacer builds de Android en el VPS, necesitas Android SDK**:
+
+```bash
+# Instalar Java JDK 17 (requerido por Android)
+sudo apt install -y openjdk-17-jdk
+
+# Verificar instalación
+java -version
+
+# Descargar Android Command Line Tools
+cd /opt
+sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+sudo unzip commandlinetools-linux-9477386_latest.zip -d android-sdk
+sudo rm commandlinetools-linux-9477386_latest.zip
+
+# Configurar variables de entorno
+echo 'export ANDROID_HOME=/opt/android-sdk' >> ~/.bashrc
+echo 'export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools' >> ~/.bashrc
+source ~/.bashrc
+
+# Aceptar licencias
+yes | sdkmanager --licenses
+
+# Instalar build tools y platform
+sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+```
+
+#### 2.4 Deployment del Backend
+
+**Clonar/Subir el código al VPS**:
+```bash
+# Opción 1: Clonar desde GitHub
+cd /home/tu-usuario
+git clone https://github.com/tu-usuario/expo-android-builder.git
+cd expo-android-builder/server
+
+# Opción 2: Subir desde Termux usando rsync
+# (desde Termux):
+# rsync -avz ~/expo-android-builder/ usuario@tu-vps-ip:/home/usuario/expo-android-builder/
+```
+
+**Configurar variables de entorno**:
+```bash
+# Crear .env en el servidor
+cd /home/tu-usuario/expo-android-builder/server
+nano .env
+
+# Agregar:
+PORT=3001
+HOST=0.0.0.0
+NODE_ENV=production
+DATABASE_URL=postgresql://expo_user:tu-password@localhost:5432/expo_builder
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=tu-clave-secreta-minimo-32-caracteres
+PROJECTS_BASE_PATH=/home/tu-usuario/app-builder-projects
+MAX_PROJECTS_PER_USER=10
+```
+
+**Instalar dependencias**:
+```bash
+cd /home/tu-usuario/expo-android-builder/server
+npm install --production
 ```
 
 **Modificar `server/server.js`** (línea 53):
@@ -232,7 +335,82 @@ server.listen(PORT, HOST, () => {
   logger.info(`Server started on ${HOST}:${PORT}`);
 ```
 
-#### 2.3 Inicialización de DB en Startup
+**Iniciar con PM2**:
+```bash
+# Iniciar servidor
+pm2 start server.js --name expo-builder-api
+
+# Guardar configuración PM2
+pm2 save
+pm2 startup
+```
+
+#### 2.5 Configurar Nginx como Reverse Proxy
+
+**Crear archivo de configuración Nginx**:
+```bash
+sudo nano /etc/nginx/sites-available/expo-builder
+```
+
+**Contenido**:
+```nginx
+server {
+    listen 80;
+    server_name tu-dominio.com;  # O IP del VPS
+
+    # Límite de tamaño de upload (para APKs)
+    client_max_body_size 100M;
+
+    # API REST
+    location /api {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # WebSocket (para Socket.io)
+    location /socket.io {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Health check
+    location /health {
+        proxy_pass http://localhost:3001;
+    }
+}
+```
+
+**Activar sitio**:
+```bash
+sudo ln -s /etc/nginx/sites-available/expo-builder /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+#### 2.6 SSL con Let's Encrypt (Opcional pero recomendado)
+
+```bash
+# Instalar Certbot
+sudo apt install -y certbot python3-certbot-nginx
+
+# Obtener certificado SSL
+sudo certbot --nginx -d tu-dominio.com
+
+# Auto-renovación (ya configurada automáticamente)
+sudo certbot renew --dry-run
+```
+
+#### 2.7 Inicialización de DB en Startup
 
 **Agregar a `server/server.js`** (después de línea 13):
 ```javascript
@@ -249,7 +427,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 ```
 
-#### 2.4 Security Hardening
+#### 2.8 Security Hardening
 
 **Agregar a `server/server.js`** (antes de línea 23):
 ```javascript
@@ -264,6 +442,14 @@ const apiLimiter = rateLimit({
 });
 
 app.use('/api/', apiLimiter);
+```
+
+**Configurar firewall UFW**:
+```bash
+sudo ufw allow 22/tcp   # SSH
+sudo ufw allow 80/tcp   # HTTP
+sudo ufw allow 443/tcp  # HTTPS
+sudo ufw enable
 ```
 
 ---
@@ -457,11 +643,11 @@ useEffect(() => {
 
 ---
 
-### **FASE 4: Standalone APK Configuration** (1 semana)
+### **FASE 4: Builds de Android en VPS** (1 semana)
 
-#### 4.1 Actualizar app.json
+#### 4.1 Configurar Expo para Builds Locales
 
-**Archivo a MODIFICAR**: `app/app.json`
+**Actualizar `app/app.json`**:
 
 ```json
 {
@@ -469,7 +655,6 @@ useEffect(() => {
     "name": "Expo Builder",
     "slug": "expo-builder",
     "version": "1.0.0",
-    "owner": "josejordandev",
 
     "android": {
       "package": "com.josejordandev.expobuilder",
@@ -482,63 +667,271 @@ useEffect(() => {
     },
 
     "extra": {
-      "apiUrl": "https://api.expo-builder.com",
-      "eas": {
-        "projectId": "your-project-id-from-eas"
-      }
+      "apiUrl": "https://tu-dominio.com"
     }
   }
 }
 ```
 
-#### 4.2 Crear eas.json
+#### 4.2 Crear BuildService en Backend
 
-**Archivo a CREAR**: `app/eas.json`
+**Archivo a CREAR**: `server/src/services/BuildService.js`
 
-```json
-{
-  "cli": {
-    "version": ">= 7.0.0",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
-      },
-      "env": {
-        "API_URL": "https://api.expo-builder.com"
-      }
-    },
-    "production": {
-      "android": {
-        "buildType": "app-bundle"
-      },
-      "env": {
-        "API_URL": "https://api.expo-builder.com"
-      }
+```javascript
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs').promises;
+const logger = require('../utils/logger');
+
+class BuildService {
+  constructor() {
+    this.buildsPath = process.env.BUILDS_PATH || '/home/usuario/builds';
+  }
+
+  /**
+   * Ejecuta build de Android usando expo build:android
+   */
+  async buildAndroid(userId, projectName, buildType = 'apk') {
+    const projectPath = path.join(
+      process.env.PROJECTS_BASE_PATH,
+      userId,
+      projectName
+    );
+
+    const buildId = `${projectName}-${Date.now()}`;
+    const buildDir = path.join(this.buildsPath, buildId);
+
+    // Crear directorio de build
+    await fs.mkdir(buildDir, { recursive: true });
+
+    return new Promise((resolve, reject) => {
+      logger.info('Starting Android build', { projectName, buildType });
+
+      // Ejecutar expo build:android
+      const buildProcess = spawn('npx', [
+        'expo',
+        'build:android',
+        `-t`, buildType,
+        '--no-publish'
+      ], {
+        cwd: projectPath,
+        env: {
+          ...process.env,
+          EXPO_NO_TELEMETRY: '1'
+        }
+      });
+
+      let output = '';
+
+      buildProcess.stdout.on('data', (data) => {
+        output += data.toString();
+        logger.info('Build output', { data: data.toString() });
+      });
+
+      buildProcess.stderr.on('data', (data) => {
+        logger.error('Build error', { error: data.toString() });
+      });
+
+      buildProcess.on('close', async (code) => {
+        if (code === 0) {
+          // Buscar APK generado
+          const apkPath = await this.findGeneratedApk(projectPath);
+
+          if (apkPath) {
+            // Copiar APK a directorio de builds
+            const finalApkPath = path.join(buildDir, `${projectName}.apk`);
+            await fs.copyFile(apkPath, finalApkPath);
+
+            resolve({
+              success: true,
+              buildId,
+              apkPath: finalApkPath,
+              downloadUrl: `/api/builds/${buildId}/download`
+            });
+          } else {
+            reject(new Error('APK not found after build'));
+          }
+        } else {
+          reject(new Error(`Build failed with code ${code}`));
+        }
+      });
+    });
+  }
+
+  async findGeneratedApk(projectPath) {
+    const androidBuildPath = path.join(
+      projectPath,
+      'android',
+      'app',
+      'build',
+      'outputs',
+      'apk',
+      'release'
+    );
+
+    try {
+      const files = await fs.readdir(androidBuildPath);
+      const apkFile = files.find(f => f.endsWith('.apk'));
+      return apkFile ? path.join(androidBuildPath, apkFile) : null;
+    } catch (error) {
+      return null;
     }
   }
+
+  async getBuildStatus(buildId) {
+    const buildDir = path.join(this.buildsPath, buildId);
+    const exists = await fs.access(buildDir).then(() => true).catch(() => false);
+
+    if (!exists) {
+      return { status: 'not_found' };
+    }
+
+    const apkExists = await fs.access(
+      path.join(buildDir, `${buildId.split('-')[0]}.apk`)
+    ).then(() => true).catch(() => false);
+
+    return {
+      status: apkExists ? 'completed' : 'building',
+      buildId,
+      downloadUrl: apkExists ? `/api/builds/${buildId}/download` : null
+    };
+  }
 }
+
+module.exports = new BuildService();
 ```
 
-#### 4.3 Comandos de Build
+#### 4.3 Endpoints de Build en el Backend
 
-```bash
-# 1. Inicializar EAS (una vez)
-cd app
-eas init
+**Archivo a CREAR**: `server/src/routes/builds.js`
 
-# 2. Configurar credentials
-eas credentials
+```javascript
+const express = require('express');
+const router = express.Router();
+const BuildService = require('../services/BuildService');
+const authMiddleware = require('../middleware/auth');
 
-# 3. Build preview APK
-eas build --platform android --profile preview
+// Iniciar build
+router.post('/', authMiddleware, async (req, res, next) => {
+  try {
+    const { projectName, buildType } = req.body;
+    const userId = req.user.id;
 
-# 4. Build production AAB (para Play Store futuro)
-eas build --platform android --profile production
+    const result = await BuildService.buildAndroid(userId, projectName, buildType);
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Estado del build
+router.get('/:buildId/status', authMiddleware, async (req, res, next) => {
+  try {
+    const { buildId } = req.params;
+    const status = await BuildService.getBuildStatus(buildId);
+
+    res.json(status);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Descargar APK
+router.get('/:buildId/download', authMiddleware, async (req, res, next) => {
+  try {
+    const { buildId } = req.params;
+    const apkPath = path.join(
+      process.env.BUILDS_PATH,
+      buildId,
+      `${buildId.split('-')[0]}.apk`
+    );
+
+    res.download(apkPath);
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;
+```
+
+**Registrar rutas en `server/server.js`**:
+```javascript
+const buildsRouter = require('./src/routes/builds');
+app.use('/api/builds', buildsRouter);
+```
+
+#### 4.4 Job Queue para Builds (Recomendado)
+
+**Para evitar sobrecarga, usar Bull queue**:
+
+```javascript
+// server/src/services/BuildQueue.js
+const Queue = require('bull');
+const BuildService = require('./BuildService');
+
+const buildQueue = new Queue('android-builds', {
+  redis: process.env.REDIS_URL
+});
+
+// Worker
+buildQueue.process(async (job) => {
+  const { userId, projectName, buildType } = job.data;
+
+  job.progress(10);
+  const result = await BuildService.buildAndroid(userId, projectName, buildType);
+  job.progress(100);
+
+  return result;
+});
+
+// Notificar cuando complete
+buildQueue.on('completed', (job, result) => {
+  // Emitir via WebSocket
+  io.to(job.data.userId).emit('build:completed', result);
+});
+
+module.exports = buildQueue;
+```
+
+#### 4.5 Actualizar BuildStatusScreen en Frontend
+
+**Modificar `app/screens/BuildStatusScreen.js`** para usar la nueva API:
+
+```javascript
+const startBuild = async () => {
+  try {
+    setLoading(true);
+
+    const response = await api.post('/builds', {
+      projectName: selectedProject,
+      buildType: 'apk'
+    });
+
+    setBuildId(response.data.buildId);
+    pollBuildStatus(response.data.buildId);
+  } catch (error) {
+    Alert.alert('Error', 'Failed to start build');
+  }
+};
+
+const pollBuildStatus = async (buildId) => {
+  const interval = setInterval(async () => {
+    try {
+      const response = await api.get(`/builds/${buildId}/status`);
+
+      if (response.data.status === 'completed') {
+        clearInterval(interval);
+        setDownloadUrl(response.data.downloadUrl);
+        setLoading(false);
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setLoading(false);
+    }
+  }, 5000); // Poll cada 5 segundos
+};
 ```
 
 ---
@@ -692,10 +1085,11 @@ async createProject(userId, projectName, template) {
 4. 📝 **`server/src/services/AuthService.js`** - CREAR
 5. 📝 **`server/src/routes/auth.js`** - CREAR
 
-### FASE 2 - Cloud Deployment (ALTA PRIORIDAD)
-1. ⚠️ **`server/server.js`** - Agregar DB init, cambiar bind host
-2. 📝 **`server/railway.json`** - CREAR
-3. ⚠️ **`server/.env`** - Actualizar con nuevas variables
+### FASE 2 - VPS Deployment (ALTA PRIORIDAD)
+1. ⚠️ **`server/server.js`** - Agregar DB init, cambiar bind host a 0.0.0.0
+2. ⚠️ **`server/.env`** - Actualizar con DATABASE_URL, REDIS_URL, JWT_SECRET
+3. 📝 **Configurar Nginx** - Crear /etc/nginx/sites-available/expo-builder
+4. 📝 **Configurar PM2** - pm2 start server.js y pm2 save
 
 ### FASE 3 - Frontend Auth (ALTA PRIORIDAD)
 1. ⚠️ **`app/App.js`** - Agregar auth flow y navigation condicional
@@ -704,9 +1098,13 @@ async createProject(userId, projectName, template) {
 4. 📝 **`app/screens/RegisterScreen.js`** - CREAR
 5. ⚠️ **`app/utils/storage.js`** - Agregar userId methods
 
-### FASE 4 - APK Config (MEDIA PRIORIDAD)
-1. ⚠️ **`app/app.json`** - Actualizar con package, permissions
-2. 📝 **`app/eas.json`** - CREAR
+### FASE 4 - Builds en VPS (ALTA PRIORIDAD)
+1. ⚠️ **`app/app.json`** - Actualizar con package, permissions, apiUrl
+2. 📝 **`server/src/services/BuildService.js`** - CREAR (lógica de builds)
+3. 📝 **`server/src/routes/builds.js`** - CREAR (endpoints de builds)
+4. 📝 **`server/src/services/BuildQueue.js`** - CREAR (job queue)
+5. ⚠️ **`app/screens/BuildStatusScreen.js`** - Modificar para usar nueva API
+6. 📝 **Configurar Android SDK en VPS** - Instalar Java JDK, Android SDK, build tools
 
 ### FASE 5 - Security (MEDIA PRIORIDAD)
 1. ⚠️ **`server/server.js`** - WebSocket auth
@@ -724,18 +1122,20 @@ async createProject(userId, projectName, template) {
 
 ## Timeline Estimado
 
-| Fase | Duración | Puede empezar |
-|------|----------|---------------|
-| Fase 1: Backend Auth & DB | 2-3 semanas | Inmediatamente |
-| Fase 2: Cloud Deployment | 1-2 semanas | Después Fase 1 |
-| Fase 3: Frontend Auth | 2-3 semanas | Paralelo con Fase 1 |
-| Fase 4: APK Config | 1 semana | Después Fase 3 |
-| Fase 5: Security | 1 semana | Después Fase 2 |
-| Fase 6: Job Queues | 2 semanas | Después Fase 2 |
+| Fase | Duración | Puede empezar | Notas |
+|------|----------|---------------|-------|
+| Fase 1: Backend Auth & DB | 2-3 semanas | Inmediatamente | Desarrollo local en Termux primero |
+| Fase 2: VPS Deployment | 3-5 días | Después Fase 1 | Más rápido con VPS ya funcionando |
+| Fase 3: Frontend Auth | 2-3 semanas | Paralelo con Fase 1 | Login/Register screens |
+| Fase 4: Builds en VPS | 1-2 semanas | Después Fase 2 | Incluye setup de Android SDK |
+| Fase 5: Security | 1 semana | Después Fase 2 | SSL, rate limiting, validación |
+| Fase 6: Job Queues | 1-2 semanas | Después Fase 4 | Opcional pero recomendado |
 
-**Total estimado**: 9-12 semanas (2-3 meses)
+**Total estimado**: 8-11 semanas (2-2.5 meses)
 
-**Nota**: Fases 1 y 3 pueden desarrollarse en paralelo (backend y frontend teams separados).
+**Ventaja**: Con VPS ya funcionando, la FASE 2 se reduce significativamente.
+
+**Nota**: Fases 1 y 3 pueden desarrollarse en paralelo (backend y frontend separados).
 
 ---
 
@@ -746,7 +1146,9 @@ async createProject(userId, projectName, template) {
 - **Auth**: jsonwebtoken + bcryptjs
 - **Job Queue**: Bull + Redis
 - **Security**: helmet, express-rate-limit, express-validator
-- **Deployment**: Railway (recomendado) o Render
+- **Deployment**: VPS Hetzner con PM2
+- **Reverse Proxy**: Nginx
+- **SSL**: Let's Encrypt (Certbot)
 
 ### Frontend
 - **React Native**: Expo SDK 54 (existente)
@@ -756,21 +1158,32 @@ async createProject(userId, projectName, template) {
 - **WebSocket**: socket.io-client (existente)
 
 ### Infrastructure
-- **Hosting**: Railway ($20/mes incluye Postgres y Redis)
-- **Storage**: Filesystem del servidor inicialmente, S3 para escalar
-- **SSL**: Automático (Railway/Render)
-- **Monitoring**: Sentry para errores
+- **Hosting**: Hetzner VPS (€5-10/mes según plan)
+  - CX21: 2 vCPU, 4GB RAM, 40GB SSD (~€5.83/mes)
+  - CX31: 2 vCPU, 8GB RAM, 80GB SSD (~€10.76/mes)
+- **Database**: PostgreSQL (instalado en VPS)
+- **Cache/Queue**: Redis (instalado en VPS)
+- **Storage**: Filesystem del VPS (proyectos y APKs)
+- **SSL**: Let's Encrypt (gratuito)
+- **Monitoring**: PM2 monitoring + logs (opcional: Sentry para errores)
+- **Process Manager**: PM2 con auto-restart
+
+**Costos mensuales estimados**:
+- VPS Hetzner CX21: €5.83/mes
+- Dominio (opcional): €10-15/año
+- **Total**: ~€6-10/mes (vs $29/mes de EAS)
 
 ---
 
 ## Riesgos y Mitigaciones
 
-### 🔴 Riesgo Alto: CLI Tools en Cloud
-**Problema**: Expo CLI, EAS CLI pueden no funcionar en containers
-**Mitigación**:
-- Probar en Docker local primero
-- Alternativa: Usar Expo web API en vez de CLI
-- Job queue para evitar conflictos
+### 🟢 Riesgo Bajo: CLI Tools en VPS (Resuelto)
+**Antes**: Expo CLI podía no funcionar en containers restrictivos
+**Ahora con VPS**: ✅ Control total del sistema, Android SDK instalable
+**Ventajas**:
+- Instalación directa de Android SDK
+- Sin restricciones de container
+- Builds ilimitados y gratuitos
 
 ### 🟡 Riesgo Medio: Costos de Storage
 **Problema**: Proyectos pueden consumir mucho espacio
@@ -797,50 +1210,90 @@ async createProject(userId, projectName, template) {
 
 ## Próximos Pasos Inmediatos
 
-### 1. Setup Inicial (Día 1)
+### 1. Preparar VPS (Día 1-2)
 ```bash
-# Railway
-railway login
-railway init
-railway add --database postgres
+# Conectar al VPS
+ssh root@tu-vps-ip
 
-# O Render
-# Crear cuenta, conectar GitHub, agregar Postgres
+# Instalar dependencias del sistema
+apt update && apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs postgresql postgresql-contrib redis-server nginx git
+
+# Instalar Android SDK
+apt install -y openjdk-17-jdk
+# ... (seguir pasos de FASE 2.3)
+
+# Instalar PM2
+npm install -g pm2
+
+# Configurar PostgreSQL
+sudo -u postgres psql
+CREATE DATABASE expo_builder;
+CREATE USER expo_user WITH PASSWORD 'tu-password';
+GRANT ALL PRIVILEGES ON DATABASE expo_builder TO expo_user;
+\q
 ```
 
 ### 2. Backend Auth (Semana 1)
-- Crear modelos User, Project
-- Implementar AuthService
+- Crear modelos User, Project con Sequelize
+- Implementar AuthService (JWT)
 - Modificar auth middleware
 - Crear endpoints /auth/register, /auth/login
+- Probar localmente en Termux primero
 
-### 3. Testing Local (Semana 2)
-- Probar registro/login localmente
-- Verificar JWT generation/verification
-- Probar multi-usuario con Postman
+### 3. Deploy al VPS (Semana 2)
+```bash
+# Subir código al VPS
+git clone https://github.com/tu-usuario/expo-android-builder.git
+cd expo-android-builder/server
+npm install
 
-### 4. Deploy a Cloud (Semana 3)
-- Push a Railway/Render
-- Configurar env variables
-- Verificar health endpoint
-- Probar desde móvil
+# Configurar .env
+nano .env
 
-### 5. Frontend Auth Screens (Semana 4-5)
+# Iniciar con PM2
+pm2 start server.js --name expo-builder-api
+pm2 save
+pm2 startup
+```
+
+### 4. Configurar Nginx y SSL (Semana 2)
+- Configurar reverse proxy Nginx
+- Obtener certificado SSL con Let's Encrypt
+- Probar HTTPS y WebSocket desde internet
+
+### 5. Frontend Auth Screens (Semana 3-4)
 - Crear LoginScreen, RegisterScreen
 - Modificar App.js navigation
-- Actualizar api.js
+- Actualizar api.js para usar URL del VPS
+- Probar autenticación desde app
 
-### 6. Primera Build APK (Semana 6)
-- Configurar eas.json
-- `eas build --platform android --profile preview`
-- Instalar y probar en dispositivo real
+### 6. Configurar Builds en VPS (Semana 5)
+- Instalar Android SDK completo en VPS
+- Crear BuildService.js
+- Implementar endpoints de builds
+- Probar build local en VPS
+
+### 7. Primera Build APK Standalone (Semana 6)
+- Actualizar app.json
+- Hacer build desde la app usando el VPS
+- Descargar APK y probar en dispositivo real
+- Firmar APK para distribución
 
 ---
 
 ## Conclusión
 
-Este plan transforma Expo App Builder de una herramienta local Termux a una app Android standalone con backend cloud multi-usuario, manteniendo toda la funcionalidad existente pero haciéndola accesible para usuarios que no usan Termux.
+Este plan transforma Expo App Builder de una herramienta local Termux a una app Android standalone con backend cloud multi-usuario en **VPS Hetzner**, manteniendo toda la funcionalidad existente pero haciéndola accesible para usuarios que no usan Termux.
+
+**Ventajas del enfoque con VPS propio**:
+- 💰 **Costo reducido**: €6-10/mes vs $29/mes de EAS
+- 🔧 **Control total**: Android SDK, builds ilimitados, sin restricciones
+- 🚀 **Independencia**: No dependes de servicios externos para builds
+- 📦 **Datos propios**: Proyectos y APKs bajo tu control completo
+- ⚡ **Personalización**: Puedes optimizar el servidor según tus necesidades
 
 **Enfoque incremental**: Cada fase agrega valor sin romper funcionalidad existente.
 
-**Resultado final**: APK firmado distribuible que conecta a backend cloud, soporta múltiples usuarios, y mantiene capacidades de Project Builder.
+**Resultado final**: APK firmado distribuible que conecta a backend cloud en tu VPS Hetzner, soporta múltiples usuarios, y mantiene capacidades completas de Project Builder con builds locales ilimitados.
