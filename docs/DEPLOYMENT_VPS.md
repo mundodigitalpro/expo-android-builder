@@ -679,3 +679,79 @@
   677 **Last Updated**: December 31, 2024
   678 **Deployed Version**: 1.0.0
   679 **Maintainer**: [@mundodigitalpro](https://github.com/mundodigitalpro)
+---
+
+## ✅ Production Configuration - Verified January 1, 2026
+
+### Final Architecture (Hybrid Approach)
+
+After resolving GLIBC compatibility issues, the production deployment uses a **hybrid approach**:
+
+| Component | Location | Version | Size | Notes |
+|-----------|----------|---------|------|-------|
+| **Java JDK 17** | Inside container | 17.0.17 | ~400MB | Installed via apt (compatible with Debian 11) |
+| **Android SDK** | Mounted from host | 12.0 | 448MB | Read-only mount from `/opt/android-sdk` |
+| **Expo CLI** | Inside container | 6.3.12 | ~700MB | Global npm install |
+| **EAS CLI** | Inside container | 16.28.0 | Included | Global npm install |
+| **Node.js** | Inside container | 18.20.8 | Base image | node:18-bullseye-slim |
+| **uuid package** | Inside container | 9.0.0 | - | Downgraded for CommonJS compatibility |
+
+**Total Docker Image Size**: 1.38GB
+
+### Why Hybrid Instead of All-Host or All-Container?
+
+**Problem Encountered (Dec 31)**: Mounting Java from Ubuntu 24.04 host (GLIBC 2.39) into Debian 11 container (GLIBC 2.31) caused fatal incompatibility:
+```
+java: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found
+```
+
+**Solution (Jan 1)**: Hybrid approach balances space efficiency with compatibility:
+- ✅ **Java inside container**: Guarantees GLIBC compatibility (Debian 11 → Debian 11)
+- ✅ **Android SDK mounted**: Shares 448MB across containers, no GLIBC dependency
+- ✅ **CLIs inside container**: Isolated dependencies, easier updates
+
+### Verified Functionality
+
+```bash
+# Java - ✅ Working
+$ docker exec expo-builder java -version
+openjdk version "17.0.17" 2025-10-21
+
+# Android SDK Manager - ✅ Working
+$ docker exec expo-builder sdkmanager --version
+12.0
+
+# ADB - ✅ Working
+$ docker exec expo-builder adb --version
+Android Debug Bridge version 1.0.41
+
+# Expo CLI - ✅ Working (with Node 17+ warning)
+$ docker exec expo-builder expo --version
+6.3.12
+
+# EAS CLI - ✅ Working
+$ docker exec expo-builder eas --version
+eas-cli/16.28.0 linux-x64 node-v18.20.8
+
+# Public endpoint - ✅ Working
+$ curl https://builder.josejordan.dev/health
+{"status":"ok","timestamp":"2026-01-01T19:12:36.516Z","uptime":66.89}
+```
+
+### Key Changes from Initial Deployment
+
+1. **Dockerfile**: Added `openjdk-17-jdk` installation and global npm packages (expo-cli, eas-cli)
+2. **docker-compose.yml**: Removed Java mount from host, kept only Android SDK mount
+3. **package.json**: Downgraded `uuid` from ^13.0.0 to ^9.0.0 (CommonJS compatibility)
+4. **Image size**: Increased from 296MB to 1.38GB (trade-off for full functionality)
+
+### Git Commits
+
+- `446f08e` - fix: Install Java and CLIs inside container for GLIBC compatibility
+- `7883e1d` - fix: Downgrade uuid to v9.0.0 for CommonJS compatibility
+
+---
+
+**Status**: ✅ Fully operational with all features working  
+**Updated**: January 1, 2026  
+**Version**: 1.0.1 (Hybrid Architecture)
