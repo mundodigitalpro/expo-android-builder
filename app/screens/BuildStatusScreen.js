@@ -11,10 +11,29 @@ import {
   Animated,
 } from 'react-native';
 import socketService from '../services/socket';
-import { buildsApi } from '../services/api';
+import { buildsApi, localBuildsApi } from '../services/api';
+
+// Build type configuration
+const BUILD_TYPES = {
+  EAS: {
+    id: 'EAS',
+    name: 'EAS Cloud',
+    description: 'Builds en la nube de Expo',
+    icon: '☁️',
+    color: '#007AFF',
+  },
+  LOCAL: {
+    id: 'LOCAL',
+    name: 'Local VPS',
+    description: 'Builds nativos en el VPS',
+    icon: '🖥️',
+    color: '#4CAF50',
+  },
+};
 
 export default function BuildStatusScreen({ route }) {
   const { project } = route.params;
+  const [buildType, setBuildType] = useState('EAS');
   const [builds, setBuilds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -266,9 +285,11 @@ export default function BuildStatusScreen({ route }) {
       return;
     }
 
+    const buildConfig = BUILD_TYPES[buildType];
+
     Alert.alert(
       'Start Build',
-      `Start ${platform} build with profile "${profile}"?`,
+      `Start ${platform} build with ${buildConfig.name}?\n\nProfile: "${profile}"`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -278,8 +299,11 @@ export default function BuildStatusScreen({ route }) {
               setLoading(true);
               setBuildStartTime(Date.now());
               setElapsedTime(0);
-              setBuildProgress('🚀 Starting build...');
-              const result = await buildsApi.start(
+              setBuildProgress(`🚀 Starting ${buildConfig.name} build...`);
+
+              // Use appropriate API based on build type
+              const api = buildType === 'EAS' ? buildsApi : localBuildsApi;
+              const result = await api.start(
                 project.path,
                 platform,
                 profile,
@@ -414,14 +438,51 @@ export default function BuildStatusScreen({ route }) {
         <Text style={styles.projectName}>📦 {project.name}</Text>
       </View>
 
+      {/* Build Type Selector */}
+      <View style={styles.buildTypeSelector}>
+        <Text style={styles.selectorLabel}>Tipo de Build:</Text>
+        <View style={styles.typeButtons}>
+          {Object.entries(BUILD_TYPES).map(([key, type]) => (
+            <Pressable
+              key={key}
+              style={[
+                styles.typeButton,
+                buildType === key && styles.typeButtonActive,
+                { borderColor: type.color },
+                buildType === key && { backgroundColor: type.color + '15' },
+              ]}
+              onPress={() => setBuildType(key)}
+              disabled={loading}
+            >
+              <Text style={styles.typeIcon}>{type.icon}</Text>
+              <Text
+                style={[
+                  styles.typeName,
+                  buildType === key && { color: type.color, fontWeight: 'bold' },
+                ]}
+              >
+                {type.name}
+              </Text>
+              <Text style={styles.typeDescription}>{type.description}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
       <View style={styles.buildButtonsContainer}>
         <Pressable
-          style={[styles.buildButton, loading && styles.buildButtonDisabled]}
+          style={[
+            styles.buildButton,
+            { backgroundColor: BUILD_TYPES[buildType].color },
+            loading && styles.buildButtonDisabled,
+          ]}
           onPress={() => startBuild('android', 'preview')}
           disabled={loading || !!activeBuildId}
         >
           <Text style={styles.buildButtonText}>
-            {loading ? '⏳ Building...' : '🔨 Build Preview (APK)'}
+            {loading
+              ? `⏳ Building with ${BUILD_TYPES[buildType].name}...`
+              : `🔨 Build Preview (${buildType === 'EAS' ? 'APK Cloud' : 'APK Local'})`}
           </Text>
         </Pressable>
 
@@ -522,6 +583,48 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  buildTypeSelector: {
+    padding: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  selectorLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 12,
+  },
+  typeButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  typeButton: {
+    flex: 1,
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  typeButtonActive: {
+    borderWidth: 2,
+  },
+  typeIcon: {
+    fontSize: 28,
+    marginBottom: 4,
+  },
+  typeName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  typeDescription: {
+    fontSize: 11,
+    color: '#999',
+    textAlign: 'center',
+  },
   buildButtonsContainer: {
     padding: 16,
     backgroundColor: '#fff',
@@ -529,7 +632,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   buildButton: {
-    backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

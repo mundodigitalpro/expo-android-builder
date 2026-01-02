@@ -116,13 +116,19 @@ This will:
 4. Claude will respond in real-time via WebSocket
 5. You can cancel ongoing operations if needed
 
-### Building with EAS
+### Building Apps
 
 1. Navigate to **Build Status** from the menu
-2. Select a project to build
-3. Choose platform (Android/iOS)
+2. Select **build type**:
+   - ☁️ **EAS Cloud**: Remote builds on Expo's servers
+   - 🖥️ **Local VPS**: Native builds on your own VPS
+3. Tap the build button
 4. Monitor build progress in real-time
 5. Download APK when build completes
+
+**Build Types**:
+- **EAS Cloud**: Faster setup, requires Expo account, 5-15 min builds
+- **Local VPS**: Full control, self-hosted, no external dependencies
 
 ### Server Configuration
 
@@ -203,7 +209,7 @@ These are automatically initialized on first launch.
 
 - ✅ **Phase 1**: Basic Setup (Server, App, Project CRUD, Auth)
 - ✅ **Phase 2**: Claude Code Integration (CLI execution, WebSocket streaming)
-- ✅ **Phase 3**: EAS Build Integration (Build management, APK downloads)
+- ✅ **Phase 3**: Build Integration (EAS Cloud + Local VPS builds, build type selector)
 - ⏳ **Phase 4**: UI Refinement (Dark mode, animations, enhanced design)
 - 📋 **Phase 5**: Testing & Polish (Test suite, docs, optimization)
 

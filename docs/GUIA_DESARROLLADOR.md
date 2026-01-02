@@ -1,8 +1,8 @@
 # Guía para Desarrolladores - Expo App Builder
 
 **Proyecto**: Expo App Builder con Integración Claude Code
-**Estado**: Fase 1 Completada ✅ | Fase 2-5 Pendientes
-**Última actualización**: 29 de Diciembre, 2024
+**Estado**: Fases 1-3 Completadas ✅ | Fases 4-5 Pendientes
+**Última actualización**: 2 de Enero, 2026
 **Desarrollado en**: Termux (Android) con Claude Code
 
 ---
@@ -26,15 +26,27 @@
 
 ### Visión General
 
-**Expo App Builder** es una aplicación móvil Android que permite crear y gestionar aplicaciones Expo directamente desde un dispositivo móvil, con integración de Claude Code para asistencia de desarrollo mediante IA.
+**Expo Android Builder** es una aplicación móvil Android que permite crear y gestionar aplicaciones Expo directamente desde un dispositivo móvil, con integración de Claude Code para asistencia de desarrollo mediante IA y soporte para builds tanto en EAS Cloud como en VPS propio.
 
 ### Problema que resuelve
 
 Desarrollar apps móviles tradicionalmente requiere una computadora. Este proyecto permite:
 - Crear proyectos Expo desde el móvil
 - Usar Claude Code como asistente de desarrollo
-- Compilar APKs con EAS Build
-- Todo desde Android con Termux
+- Compilar APKs con EAS Build o en VPS propio
+- Desarrollo local en Termux o remoto contra VPS
+
+### Modos de Operación
+
+**Desarrollo Local (Termux)**:
+- Backend y Frontend en el mismo dispositivo Android
+- URL: http://localhost:3001
+- Ideal para desarrollo y testing sin conexión
+
+**Producción (VPS)**:
+- Backend en servidor VPS remoto (Hetzner)
+- URL: https://builder.josejordan.dev
+- Builds nativos en el servidor, sin depender de EAS Cloud
 
 ### Caso de uso principal
 
@@ -122,9 +134,17 @@ Todo sin necesidad de una computadora.
 
 ---
 
-## ✅ Lo que ya está hecho (Fase 1)
+## ✅ Lo que ya está hecho (Fases 1-3)
 
-### Estado: Fase 1 - Setup Básico COMPLETADA
+### Resumen de Fases Completadas
+
+**Fase 1**: Setup Básico ✅
+**Fase 2**: Integración Claude Code ✅
+**Fase 3**: Integración EAS Build & Local VPS Build ✅
+
+---
+
+### Fase 1 - Setup Básico COMPLETADA
 
 ### Backend Implementado
 
@@ -229,181 +249,113 @@ Todo sin necesidad de una computadora.
 
 ---
 
-## 🚧 Lo que queda por hacer (Fases 2-5)
-
-### Fase 2: Integración Claude Code 🔄 (SIGUIENTE)
+### Fase 2 - Integración Claude Code COMPLETADA ✅
 
 **Objetivo**: Permitir interactuar con Claude Code desde la app
 
-**Duración estimada**: 1-2 semanas
+**Duración real**: Completada el 29 de Diciembre, 2024
 
-#### Backend - Archivos a crear:
+**Funcionalidades implementadas:**
 
-1. **`src/services/ClaudeService.js`**
-   ```javascript
-   // Funcionalidades:
-   - executeClaudeCommand(projectPath, prompt)
-   - startClaudeSession(projectId)
-   - streamClaudeOutput(sessionId) // via WebSocket
-   - stopClaudeSession(sessionId)
-   ```
+#### Backend:
+- ✅ `ClaudeService.js` - Ejecuta Claude Code CLI
+- ✅ `routes/claude.js` - Rutas para ejecutar y cancelar Claude
+- ✅ WebSocket streaming para output en tiempo real
+- ✅ Detección automática de Claude CLI
+- ✅ Manejo de sesiones activas
 
-2. **`src/routes/claude.js`**
-   ```javascript
-   // Endpoints:
-   POST /api/claude/execute
-   POST /api/claude/session/start
-   DELETE /api/claude/session/:id
-   ```
+#### Frontend:
+- ✅ `ClaudeCodeScreen.js` - Interfaz de chat con Claude
+- ✅ `socket.js` - Cliente WebSocket mejorado
+- ✅ Estado de conexión ("Conectando...")
+- ✅ Mensajes en tiempo real
+- ✅ Cancelación de sesiones
 
-3. **`src/utils/streamProcessor.js`**
-   ```javascript
-   // Procesar output de Claude en tiempo real
-   - parseClaudeOutput(chunk)
-   - emitToWebSocket(socket, data)
-   ```
+#### API Endpoints:
+- `POST /api/claude/execute` - Ejecutar Claude Code
+- `POST /api/claude/cancel` - Cancelar sesión
 
-#### Frontend - Archivos a crear:
-
-1. **`screens/ClaudeCodeScreen.js`**
-   - Chat interface tipo WhatsApp
-   - Input para mensajes
-   - Scroll infinito de mensajes
-   - Indicador de "Claude está escribiendo..."
-   - Botón para nuevo chat
-
-2. **`components/ChatMessage.js`**
-   - Componente de mensaje individual
-   - Diferenciar usuario vs Claude
-   - Markdown rendering
-   - Timestamp
-
-3. **`components/CodeBlock.js`**
-   - Renderizar bloques de código
-   - Syntax highlighting (opcional)
-   - Botón copiar código
-
-4. **`services/socket.js`**
-   ```javascript
-   // Cliente WebSocket
-   - connect()
-   - listenToClaudeOutput(callback)
-   - sendMessage(message)
-   - disconnect()
-   ```
-
-#### Tareas específicas:
-
-- [ ] Implementar ClaudeService en backend
-- [ ] Crear endpoint para ejecutar comandos
-- [ ] Setup WebSocket events para streaming
-- [ ] Crear ClaudeCodeScreen en app
-- [ ] Implementar chat UI
-- [ ] Conectar WebSocket client
-- [ ] Manejar estados de carga
-- [ ] Guardar historial de chat (AsyncStorage)
-- [ ] Testing de integración
-
-#### Comandos Claude Code a soportar:
-
-```bash
-# Comando base
-claude code --prompt "tu mensaje" /path/to/project
-
-# Variantes
-claude code --interactive  # Modo interactivo
-claude code --file App.js  # Enfocar en archivo
-```
-
-#### Flujo de trabajo esperado:
-
-```
-1. Usuario abre proyecto en HomeScreen
-2. Presiona "Editar con Claude"
-3. Navega a ClaudeCodeScreen
-4. Escribe: "Agrega un botón contador"
-5. Backend ejecuta: claude code --prompt "..." /proyecto
-6. Output streameado via WebSocket
-7. Usuario ve respuesta en tiempo real
-8. Claude modifica archivos
-9. Usuario ve cambios reflejados
-```
+#### WebSocket Events:
+- `claude:output` - Output de Claude
+- `claude:error` - Errores
+- `claude:complete` - Sesión completada
 
 ---
 
-### Fase 3: Integración EAS Build ⏳
+### Fase 3 - Integración EAS Build & Local VPS Build COMPLETADA ✅
 
-**Objetivo**: Compilar APKs desde la app
+**Objetivo**: Compilar APKs desde la app (EAS Cloud + VPS Local)
 
-**Duración estimada**: 1-2 semanas
+**Duración real**: Completada el 2 de Enero, 2026
 
-#### Backend - Archivos a crear:
+**Funcionalidades implementadas:**
 
-1. **`src/services/EASService.js`**
-   ```javascript
-   - startBuild(projectPath, platform, profile)
-   - getBuildStatus(buildId)
-   - streamBuildLogs(buildId) // via WebSocket
-   - downloadAPK(buildUrl, destination)
-   ```
+#### Backend (EAS Cloud + Local VPS):
+- ✅ `EASService.js` - Servicio completo para builds con EAS CLI
+  - `startBuild()` - Inicia builds (Android/iOS)
+  - `listBuilds()` - Lista builds con manejo robusto de errores
+  - `getBuildStatus()` - Estado de build específico
+  - `cancelBuild()` - Cancela builds activos
+  - `initProject()` - Inicializa proyecto EAS automáticamente
+  - WebSocket streaming para progreso en tiempo real
+  - Fix: `EAS_SKIP_AUTO_FINGERPRINT=1` para compatibilidad Termux
+- ✅ `LocalBuildService.js` - Builds locales en VPS sin EAS Cloud
+  - `expo prebuild` para generar proyecto nativo
+  - `./gradlew assembleDebug` para compilar
+  - Soporte para NDK y Java 17
+- ✅ `routes/builds.js` - Rutas API completas
+- ✅ `routes/localBuilds.js` - Endpoints para proceso local
+- ✅ `ProjectService.js` mejorado:
+  - Auto-configura `app.json` con `android.package`, `owner`
+  - Auto-crea `eas.json` con perfiles de build
+  - Nuevos proyectos listos para EAS desde el primer momento
 
-2. **`src/routes/build.js`**
-   ```javascript
-   POST /api/build/start
-   GET /api/build/status/:buildId
-   GET /api/build/download/:buildId
-   ```
+#### Frontend:
+- ✅ `BuildStatusScreen.js` - Pantalla de gestión de builds
+  - **Selector de tipo de build**: EAS Cloud vs Local VPS
+  - Botones visuales con iconos (☁️ Cloud / 🖥️ Local)
+  - Botón dinámico de build según tipo seleccionado
+  - Lista de builds con estados visuales
+  - Banner de progreso en tiempo real
+  - Contador de tiempo transcurrido (⏱️ MM:SS)
+  - Barra de progreso animada
+  - Botón "Configurar EAS" cuando no está vinculado
+  - Botón "Download APK" cuando build termina
+  - Link a EAS dashboard
+  - Filtrado inteligente de mensajes
+- ✅ `buildsApi` y `localBuildsApi` en `services/api.js`
+- ✅ ProjectCard con botón "🔨 Builds"
+- ✅ Navegación configurada
 
-#### Frontend - Archivos a crear:
+#### API Endpoints:
+- `POST /api/builds/start` - Iniciar build
+- `POST /api/builds/cancel` - Cancelar build
+- `GET /api/builds/status/:easBuildId` - Estado de build
+- `GET /api/builds/list` - Listar builds
+- `GET /api/builds/info/:buildId` - Info de build activo
+- `POST /api/builds/init` - Inicializar proyecto EAS
+- `POST /api/local-builds/start` - Iniciar build local
+- `GET /api/local-builds/status/:id` - Estado
+- `GET /api/local-builds/download/:id` - Descargar APK
 
-1. **`screens/BuildStatusScreen.js`**
-   - Monitor de progreso del build
-   - Logs en tiempo real
-   - Progreso visual (progress bar)
-   - Botón descargar APK cuando complete
-   - Histórico de builds
+#### WebSocket Events:
+- `build:output` - Output del proceso
+- `build:error` - Errores y mensajes (filtrados inteligentemente)
+- `build:queued` - Build encolado
+- `build:complete` - Proceso completado
 
-2. **`components/BuildLog.js`**
-   - Componente para mostrar logs
-   - Auto-scroll
-   - Colores según tipo de log
-
-3. **`screens/ProjectDetailScreen.js`** (nuevo)
-   - Info del proyecto
-   - Botón "Build APK"
-   - Botón "Editar con Claude"
-   - Estadísticas del proyecto
-
-#### Tareas específicas:
-
-- [ ] Implementar EASService
-- [ ] Setup EAS CLI en el servidor
-- [ ] Crear configuración eas.json automática
-- [ ] Implementar streaming de logs de build
-- [ ] Crear BuildStatusScreen
-- [ ] UI de progreso de build
-- [ ] Notificaciones cuando build complete
-- [ ] Integración con Termux para instalar APK
-- [ ] Testing de builds
-
-#### Comandos EAS a soportar:
-
-```bash
-# Build para preview/testing
-eas build -p android --profile preview --non-interactive
-
-# Build para producción
-eas build -p android --profile production
-
-# Verificar estado
-eas build:view BUILD_ID
-```
+#### Hitos alcanzados:
+- ✅ Primera app compilada e instalada (test-claude) - 30 Dic 2024
+- ✅ Primer build local exitoso en VPS - 2 Ene 2026
+- ✅ Sistema de despliegue basado en Git implementado
 
 ---
 
-### Fase 4: Refinamiento UI/UX ⏳
+## 🚧 Lo que queda por hacer (Fases 4-5)
 
-**Duración estimada**: 1 semana
+### Fase 4: Refinamiento UI/UX 🔄 (SIGUIENTE)
+
+**Duración estimada**: 1-2 semanas
 
 #### Mejoras planificadas:
 
@@ -436,7 +388,7 @@ eas build:view BUILD_ID
 
 ### Fase 5: Testing y Optimización ⏳
 
-**Duración estimada**: 1 semana
+**Duración estimada**: 1-2 semanas
 
 #### Testing:
 
@@ -1364,12 +1316,12 @@ Antes de empezar a desarrollar, asegúrate de:
 
 ```
 Fase 1: Setup Básico          ████████████████████  100% ✅
-Fase 2: Claude Code            ░░░░░░░░░░░░░░░░░░░░    0% 🔄 SIGUIENTE
-Fase 3: EAS Build              ░░░░░░░░░░░░░░░░░░░░    0% ⏳
-Fase 4: Refinamiento UI/UX     ░░░░░░░░░░░░░░░░░░░░    0% ⏳
+Fase 2: Claude Code            ████████████████████  100% ✅
+Fase 3: EAS Build & Local VPS  ████████████████████  100% ✅
+Fase 4: Refinamiento UI/UX     ░░░░░░░░░░░░░░░░░░░░    0% 🔄 SIGUIENTE
 Fase 5: Testing & Optimization ░░░░░░░░░░░░░░░░░░░░    0% ⏳
 
-Progreso General: ████░░░░░░░░░░░░░░░░ 20%
+Progreso General: ████████████░░░░░░░░ 60%
 ```
 
 ---
@@ -1423,6 +1375,6 @@ expo start --clear
 
 Esta guía será actualizada conforme el proyecto avance. Si encuentras algo que falta o necesita clarificación, por favor actualiza este documento.
 
-**Última actualización**: 29 de Diciembre, 2024
-**Versión**: 1.0
+**Última actualización**: 2 de Enero, 2026
+**Versión**: 2.0
 **Creado con**: Claude Code ❤️

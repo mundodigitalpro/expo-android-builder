@@ -1,40 +1,73 @@
-# Expo App Builder - Inicio Rápido
+# Expo Android Builder - Inicio Rápido
 
 ## Resumen
 
-Has creado exitosamente un sistema completo para construir apps Expo desde tu móvil Android con integración de Claude Code.
+Sistema completo para construir apps Expo desde tu móvil Android con integración de Claude Code, EAS Build, y sistema de builds locales en VPS.
 
-## Componentes Creados
+## Arquitectura del Sistema
+
+### Entornos de Ejecución
+
+**Desarrollo Local (Termux)**:
+```
+Mismo dispositivo Android (Termux)
+├── Backend (Node.js): localhost:3001
+└── Frontend (Expo App): Se conecta a localhost:3001
+```
+
+**Producción (VPS)**:
+```
+Backend: VPS Hetzner (https://builder.josejordan.dev)
+Frontend: App móvil → Se conecta al VPS remoto
+```
 
 ### 1. Servidor Backend (Node.js + Express)
-**Ubicación**: `/data/data/com.termux/files/home/expo-app-builder-server/`
+
+**Ubicación desarrollo**: `~/expo-android-builder/server/` (en Termux)
+**Ubicación producción**: VPS Hetzner (Docker container)
 
 **Características**:
 - API REST para gestión de proyectos
 - WebSocket para comunicación en tiempo real
+- Integración con Claude Code CLI
+- Integración con EAS Build
+- Sistema de builds locales en VPS
 - Ejecución segura de comandos CLI
 - Autenticación con token
 
 ### 2. App React Native (Expo)
-**Ubicación**: `/data/data/com.termux/files/home/projects/expo-app-builder/`
+
+**Ubicación**: `~/expo-android-builder/app/` (desarrollo en Termux)
 
 **Pantallas**:
 - HomeScreen: Lista de proyectos
 - NewProjectScreen: Crear nuevos proyectos
-- SettingsScreen: Configuración
+- ClaudeCodeScreen: Chat con Claude Code ✅
+- BuildStatusScreen: Monitor de builds EAS ✅
+- SettingsScreen: Configuración y selector de entorno
 
 ## Cómo Usar
 
-### Paso 1: Iniciar el Servidor
+### Inicio Rápido - TODO EN UNO (Recomendado)
 
-Opción A - Con script:
 ```bash
-/data/data/com.termux/files/home/expo-app-builder-server/start-server.sh
+cd ~/expo-android-builder/server
+./start-all-services.sh
 ```
 
-Opción B - Manualmente:
+Este script:
+- Inicia el backend en segundo plano
+- Espera a que el servidor esté listo (health check automático)
+- Inicia el servidor de desarrollo de Expo
+- Muestra el código QR para escanear con Expo Go
+- Se detiene automáticamente cuando cierras Expo
+
+### Inicio Manual (Avanzado)
+
+**Paso 1: Iniciar el Servidor**
+
 ```bash
-cd /data/data/com.termux/files/home/expo-app-builder-server
+cd ~/expo-android-builder/server
 npm start
 ```
 
@@ -45,96 +78,167 @@ Deberías ver:
 🔑 Auth token: expo-builder-token-2024-secure
 ```
 
-### Paso 2: Iniciar la App
+**Paso 2: Iniciar la App**
 
-En otra sesión de Termux (o en un nuevo tab):
+En otra sesión de Termux:
 
 ```bash
-cd /data/data/com.termux/files/home/projects/expo-app-builder
+cd ~/expo-android-builder/app
 npm start
+```
+
+### Detener Todo
+
+```bash
+# Opción 1: Ctrl+C en la terminal donde corre Expo (detiene todo)
+
+# Opción 2: Script de detención
+cd ~/expo-android-builder/server
+./stop-all-services.sh
 ```
 
 ### Paso 3: Usar la App
 
-1. La app se abrirá mostrando la lista de proyectos (vacía inicialmente)
+**Crear un Proyecto:**
+1. La app se abrirá mostrando la lista de proyectos
 2. Presiona el botón "+" para crear un nuevo proyecto
 3. Ingresa un nombre (ej: "mi-primera-app")
-4. El servidor creará el proyecto en `/data/data/com.termux/files/home/app-builder-projects/`
+4. El servidor creará el proyecto en `~/app-builder-projects/`
 5. Verás el nuevo proyecto en la lista
+
+**Usar Claude Code:**
+1. Navega a la pantalla "Claude Code" desde el menú
+2. Escribe tus preguntas o solicitudes
+3. Claude responderá en tiempo real
+4. Puedes cancelar operaciones en curso si es necesario
+
+**Hacer Builds:**
+1. Navega a "Build Status" desde el menú
+2. Selecciona el **tipo de build**:
+   - ☁️ **EAS Cloud**: Builds remotos en la nube de Expo
+   - 🖥️ **Local VPS**: Builds nativos en tu VPS propio
+3. Presiona el botón de build
+4. Monitorea el progreso en tiempo real
+5. Descarga el APK cuando termine
+
+**Diferencias entre tipos**:
+- **EAS Cloud**: Más rápido de configurar, requiere cuenta Expo
+- **Local VPS**: Más control, no depende de servicios externos, requiere VPS con Android SDK
 
 ## Configuración
 
-La app viene pre-configurada con:
-- **URL del Servidor**: http://localhost:3001
-- **Token**: expo-builder-token-2024-secure
+### Selector de Entorno
 
-Puedes cambiar estos valores en la pantalla de Configuración (ícono ⚙️).
+La app soporta dos modos de operación:
+
+**1. Desarrollo Local (localhost)**:
+- URL: `http://localhost:3001`
+- Backend corre en el mismo dispositivo (Termux)
+- Ideal para desarrollo y testing
+
+**2. Producción (VPS)**:
+- URL: `https://builder.josejordan.dev`
+- Backend en servidor remoto
+- Para uso real y builds en VPS
+
+Puedes cambiar entre entornos en:
+- **Settings** → Campo "Server URL"
+- **Token**: expo-builder-token-2024-secure (mismo para ambos entornos)
 
 ## Estructura de Proyectos
 
 Los proyectos creados se guardan en:
 ```
-/data/data/com.termux/files/home/app-builder-projects/
+~/app-builder-projects/
 ├── proyecto-1/
 ├── proyecto-2/
 └── proyecto-3/
 ```
 
 Cada proyecto es un proyecto Expo completo que puedes:
-- Editar con Claude Code
+- Editar con Claude Code ✅
 - Ejecutar con `expo start`
-- Construir con EAS Build
+- Construir con EAS Build ✅
+- Compilar localmente en VPS ✅
 
-## Próximas Funcionalidades (Plan de Desarrollo)
+## Funcionalidades Actuales
 
-### Fase 2: Integración Claude Code
+### ✅ Fase 1: Setup Básico (COMPLETADA)
+- Servidor Express con API REST
+- App React Native con navegación
+- CRUD de proyectos Expo
+- Autenticación con token
+
+### ✅ Fase 2: Integración Claude Code (COMPLETADA)
 - Chat interface en la app
-- Ejecutar comandos de Claude Code
-- Ver respuestas en tiempo real
+- Ejecución de comandos Claude Code
+- Streaming de respuestas en tiempo real
+- Cancelación de sesiones
 
-### Fase 3: EAS Build
-- Iniciar builds desde la app
-- Monitor de progreso
-- Descargar APKs
+### ✅ Fase 3: EAS Build & Local VPS Build (COMPLETADA)
+- Selector de tipo de build (EAS Cloud / Local VPS)
+- Iniciar builds desde la app con cualquier método
+- Monitor de progreso en tiempo real para ambos tipos
+- Descargar APKs generados
+- Sistema de despliegue basado en Git
 
-### Fase 4 y 5: Refinamiento
-- Mejoras de UI/UX
-- Testing completo
-- Optimizaciones
+### 🔄 Fase 4: Refinamiento UI/UX (EN PROGRESO)
+- Mejoras de diseño visual
+- Dark mode
+- Animaciones y transiciones
+- Mejor experiencia de usuario
 
-## Plan Completo
+### ⏳ Fase 5: Testing & Optimization (PENDIENTE)
+- Suite de tests automatizados
+- Optimización de rendimiento
+- Documentación para usuarios finales
 
-El plan detallado de todas las fases está guardado en:
+## Documentación Completa
+
+Los planes detallados están en:
 ```
-/data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md
+docs/GUIA_DESARROLLADOR.md       # Guía para desarrolladores
+docs/ESTADO_DESARROLLO.md         # Estado actualizado del proyecto
+docs/EXPO_APP_BUILDER_PLAN.md     # Plan completo de 5 fases
+docs/DEPLOYMENT_VPS.md            # Guía de despliegue en VPS
 ```
 
 ## Comandos Útiles
 
-### Servidor
+### Sistema Completo
+
+```bash
+# Iniciar todo (backend + frontend)
+cd ~/expo-android-builder/server
+./start-all-services.sh
+
+# Detener todo
+./stop-all-services.sh
+
+# Health check
+curl http://localhost:3001/health
+```
+
+### Servidor (solo backend)
 
 ```bash
 # Iniciar servidor
+cd ~/expo-android-builder/server
 npm start
 
-# Ver logs
-tail -f /data/data/com.termux/files/home/expo-app-builder-server/logs.txt
-
-# Detener servidor (si usaste el script)
-kill $(cat /data/data/com.termux/files/home/expo-app-builder-server/server.pid)
+# Ver logs en tiempo real
+tail -f server.log
 ```
 
-### App
+### App (solo frontend)
 
 ```bash
 # Instalar dependencias
+cd ~/expo-android-builder/app
 npm install
 
 # Iniciar app
 npm start
-
-# Ejecutar en Android
-npm run android
 
 # Limpiar cache
 npm start --clear
@@ -144,81 +248,101 @@ npm start --clear
 
 ```bash
 # Listar proyectos
-ls -la /data/data/com.termux/files/home/app-builder-projects/
+ls -la ~/app-builder-projects/
 
 # Entrar a un proyecto
-cd /data/data/com.termux/files/home/app-builder-projects/mi-proyecto
+cd ~/app-builder-projects/mi-proyecto
 
 # Iniciar un proyecto
 expo start
 ```
 
+### EAS Build
+
+```bash
+# Ver builds
+eas build:list
+
+# Build manual
+eas build --platform android --profile preview
+
+# Ver proyectos
+eas project:list
+```
+
 ## Solución de Problemas
 
-### El servidor no inicia
-- Verifica que el puerto 3001 esté libre: `lsof -i :3001`
-- Mata procesos anteriores: `pkill -f "node server"`
-- Revisa el archivo .env
+### Servidor No Disponible
 
-### La app no se conecta al servidor
-- Verifica que el servidor esté corriendo
-- Ve a Configuración y presiona "Verificar Conexión"
-- Revisa que el token sea correcto
+La app detecta automáticamente cuando el servidor está offline:
+1. Toca "📋 Copiar Comando" para copiar el comando de inicio
+2. Toca "🔧 Abrir Termux" para cambiar a Termux
+3. Pega y ejecuta el comando
+4. Vuelve a la app y toca "🔄 Reintentar Conexión"
 
-### No puedo crear proyectos
-- Verifica que el servidor tenga permisos
-- Revisa los logs del servidor
-- Asegúrate de que Expo CLI esté instalado: `npm install -g expo-cli`
+### Puerto 3001 ya en uso
+
+```bash
+cd ~/expo-android-builder/server
+./stop-all-services.sh
+./start-all-services.sh
+```
+
+### No puedo presionar 'a' para Android
+
+Esto es normal en Termux (ADB no disponible). **Usa el código QR**:
+- Escanea el QR con la app Expo Go
+- Este es el método recomendado
+
+### La app no se conecta
+
+1. Verifica que el servidor esté corriendo: `curl http://localhost:3001/health`
+2. Ve a Settings y verifica la URL del servidor
+3. Verifica que el token sea correcto
+4. Reinicia los servicios si es necesario
 
 ## Arquitectura
 
 ```
-┌─────────────────────┐
-│   React Native App  │
-│   (Tu Móvil)        │
-└──────────┬──────────┘
-           │ HTTP/WebSocket
-           │ localhost:3001
-┌──────────▼──────────┐
-│   Node.js Server    │
-│   (Termux)          │
-└──────────┬──────────┘
-           │ spawn
-    ┌──────┴──────┬─────────┐
-    │             │         │
-┌───▼───┐   ┌────▼────┐  ┌─▼──────┐
-│ Expo  │   │ Claude  │  │  Git   │
-│  CLI  │   │  Code   │  │  CLI   │
-└───────┘   └─────────┘  └────────┘
+React Native App (Expo Go)
+    ↓ HTTP REST API (port 3001) + WebSocket
+    ↓ Authorization: Bearer token
+Node.js Server (Express + Socket.io)
+    ↓ child_process.spawn()
+CLI Tools (Expo CLI, Claude Code, EAS CLI, Git)
+    ↓
+EAS Cloud (builds remotos) / VPS (builds locales)
+    ↓
+APK/AAB descargable
 ```
 
 ## Estado Actual
 
-✅ **Fase 1 COMPLETADA** - Setup Básico
+**Progreso General: 60%** 🎉
 
-- [x] Servidor Express con API REST
-- [x] App React Native con navegación
-- [x] Crear proyectos Expo
-- [x] Listar proyectos
-- [x] Eliminar proyectos
-- [x] Configuración de servidor
-- [x] Documentación completa
+- ✅ **Fase 1 COMPLETADA** - Setup Básico
+- ✅ **Fase 2 COMPLETADA** - Integración Claude Code
+- ✅ **Fase 3 COMPLETADA** - EAS Build & Local VPS Build
+- 🔄 **Fase 4 EN PROGRESO** - Refinamiento UI/UX
+- ⏳ **Fase 5 PENDIENTE** - Testing & Optimization
 
 ## Siguientes Pasos
 
-1. Probar creando varios proyectos
-2. Familiarizarte con la interface
-3. Revisar el plan completo para las próximas fases
-4. Planificar la implementación de Fase 2 (Claude Code)
+1. Probar todas las funcionalidades (Proyectos, Claude Code, Builds)
+2. Explorar la interfaz de usuario
+3. Hacer un build de prueba con EAS
+4. Revisar la documentación completa
 
 ## Recursos
 
-- Plan completo: `/data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md`
-- README App: `/data/data/com.termux/files/home/projects/expo-app-builder/README.md`
-- README Server: `/data/data/com.termux/files/home/expo-app-builder-server/README.md`
+- **Guía de Desarrollador**: `docs/GUIA_DESARROLLADOR.md`
+- **Estado del Proyecto**: `docs/ESTADO_DESARROLLO.md`
+- **Plan Completo**: `docs/EXPO_APP_BUILDER_PLAN.md`
+- **Despliegue VPS**: `docs/DEPLOYMENT_VPS.md`
+- **Índice de Docs**: `docs/INDICE_DOCUMENTACION.md`
 
 ---
 
-**Creado**: 29 de Diciembre, 2024
-**Versión**: 1.0.0 (Fase 1)
+**Última actualización**: 2 de Enero, 2026
+**Versión**: 2.0 (Fases 1-3 Completadas)
 **Desarrollado con**: Claude Code

@@ -52,6 +52,7 @@ export const claudeApi = {
 };
 
 export const buildsApi = {
+  // EAS Cloud builds
   start: (projectPath, platform, profile, socketId) =>
     api.post('/builds/start', { projectPath, platform, profile, socketId }),
   cancel: (buildId) =>
@@ -64,6 +65,16 @@ export const buildsApi = {
     api.get(`/builds/info/${buildId}`),
   init: (projectPath) =>
     api.post('/builds/init', { projectPath }),
+};
+
+export const localBuildsApi = {
+  // Local VPS builds
+  start: (projectPath, platform, profile, socketId) =>
+    api.post('/local-builds/start', { projectPath, platform, profile, socketId }),
+  getStatus: (buildId) =>
+    api.get(`/local-builds/status/${buildId}`),
+  download: (buildId) =>
+    api.get(`/local-builds/download/${buildId}`),
 };
 
 export const healthCheck = () => axios.get('http://localhost:3001/health');
