@@ -341,6 +341,25 @@ No automated test suite yet (planned for Phase 5).
 
 ## Common Issues and Solutions
 
+**VPS Deployment Issues**:
+```bash
+# Check deployment status
+cd /home/josejordan/apps/builder/server
+docker compose ps
+docker compose logs --tail=50
+
+# If deployment fails
+cd /home/josejordan/apps/builder
+git status  # Check for conflicts
+git pull origin main  # Get latest
+./deploy.sh  # Redeploy
+
+# Rollback to previous version
+git log --oneline  # Find commit hash
+git checkout <commit-hash>
+./deploy.sh
+```
+
 **Server not responding / App shows "Servidor No Disponible"**:
 ```bash
 # ⭐ RECOMMENDED: Use the unified start script
@@ -395,7 +414,33 @@ pkill -f "node server"
 pkill -f "expo start"
 ```
 
-## Recent Improvements (Dec 30, 2024)
+## Recent Improvements
+
+### January 2, 2026 - Git-Based Deployment
+
+**VPS Deployment Upgrade**:
+- Migrated from manual file copying to git-based deployment
+- `/apps/builder` is now a full git repository clone
+- Automated deployment with `deploy.sh` script
+- Workflow: `develop → git push → git pull → deploy`
+- Easy rollback with `git checkout <commit>`
+- Better traceability with git commit history
+
+**Deployment Commands**:
+```bash
+# On VPS (production)
+cd /home/josejordan/apps/builder
+./deploy.sh  # Pulls code, rebuilds, restarts
+
+# Development workflow
+cd /home/josejordan/expo-android-builder
+# make changes...
+git add . && git commit -m "feat: description"
+git push origin main
+# Then deploy on VPS
+```
+
+### December 30, 2024 - Auto-Start System
 
 **Auto-Start System**:
 - Single command starts both backend and frontend: `./start-all-services.sh`

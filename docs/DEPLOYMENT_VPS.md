@@ -752,6 +752,236 @@ $ curl https://builder.josejordan.dev/health
 
 ---
 
-**Status**: ✅ Fully operational with all features working  
-**Updated**: January 1, 2026  
-**Version**: 1.0.1 (Hybrid Architecture)
+**Status**: ✅ Fully operational with all features working
+**Updated**: January 2, 2026
+**Version**: 1.0.2 (Git-based Deployment)
+
+---
+
+## ✅ Git-Based Deployment System - January 2, 2026
+
+### Migration from Manual Copy to Git Clone
+
+**Problem**: The original deployment used manual file copying from development directory to `/apps/builder`:
+```bash
+# Old approach (error-prone)
+sudo cp -r server/* /apps/builder/
+```
+
+**Issues**:
+- Manual synchronization required
+- No version control in production
+- Risk of forgetting to copy files
+- `git pull` commands would fail (not a git repository)
+
+**Solution**: Convert `/apps/builder` to a git repository clone.
+
+### New Deployment Architecture
+
+```
+Development                  GitHub                    Production
+─────────────                ──────                    ──────────
+/home/josejordan/            Repository                /home/josejordan/apps/
+expo-android-builder/        (git)                     builder/
+├── server/                                            ├── server/
+├── app/                                               ├── app/
+└── docs/                                              └── docs/
+     │                                                       ▲
+     │                                                       │
+     └─ git push ──> GitHub ──> git pull ──────────────────┘
+```
+
+### Implementation Steps (Completed)
+
+1. **Backup Configuration**:
+```bash
+# Save .env file
+cp /home/josejordan/apps/builder/server/.env \
+   /home/josejordan/apps/builder.env.backup
+```
+
+2. **Stop Running Services**:
+```bash
+cd /home/josejordan/apps/builder/server
+docker compose down
+```
+
+3. **Replace with Git Clone**:
+```bash
+# Remove old directory
+rm -rf /home/josejordan/apps/builder
+
+# Clone repository
+git clone git@github.com:mundodigitalpro/expo-android-builder.git \
+          /home/josejordan/apps/builder
+```
+
+4. **Restore Configuration**:
+```bash
+# Restore .env file
+cp /home/josejordan/apps/builder.env.backup \
+   /home/josejordan/apps/builder/server/.env
+```
+
+5. **Create Deployment Scripts**:
+
+Created two deployment scripts for convenience:
+
+**`/home/josejordan/apps/builder/server/deploy.sh`**:
+```bash
+#!/bin/bash
+# Full deployment script with all steps
+set -e
+
+echo "🚀 Starting deployment of Expo Android Builder..."
+
+cd "$(dirname "$0")/.."
+
+# Pull latest changes
+echo "📥 Pulling latest changes from repository..."
+git pull origin main
+
+cd server
+
+# Stop containers
+echo "🛑 Stopping running containers..."
+docker compose down
+
+# Build fresh image
+echo "🔨 Building Docker image (no cache)..."
+docker compose build --no-cache
+
+# Start containers
+echo "▶️  Starting containers..."
+docker compose up -d
+
+# Show logs
+echo "📋 Recent logs:"
+docker compose logs --tail=20
+
+echo ""
+echo "✅ Deployment completed successfully!"
+```
+
+**`/home/josejordan/apps/builder/deploy.sh`** (root):
+```bash
+#!/bin/bash
+# Quick wrapper script
+set -e
+cd "$(dirname "$0")"
+exec ./server/deploy.sh
+```
+
+### Deployment Workflow
+
+#### Option 1: From project root
+```bash
+cd /home/josejordan/apps/builder
+./deploy.sh
+```
+
+#### Option 2: From server directory
+```bash
+cd /home/josejordan/apps/builder/server
+./deploy.sh
+```
+
+### What the Deploy Script Does
+
+1. ✅ **Pull latest code**: `git pull origin main`
+2. ✅ **Stop services**: `docker compose down`
+3. ✅ **Build fresh image**: `docker compose build --no-cache`
+4. ✅ **Start services**: `docker compose up -d`
+5. ✅ **Show logs**: Recent 20 lines for verification
+
+### Benefits of Git-Based Deployment
+
+| Aspect | Manual Copy (Old) | Git Clone (New) |
+|--------|------------------|-----------------|
+| **Synchronization** | Manual | Automatic with git pull |
+| **Version Control** | No | Full git history |
+| **Traceability** | None | Git commit SHAs |
+| **Rollback** | Difficult | `git checkout <commit>` |
+| **Automation** | Requires scripts | Built into git |
+| **Reliability** | Error-prone | Consistent |
+
+### Development to Production Workflow
+
+1. **Develop locally** (in `/home/josejordan/expo-android-builder`):
+```bash
+cd /home/josejordan/expo-android-builder
+# Make changes...
+```
+
+2. **Test changes**:
+```bash
+cd server
+./start-all-services.sh
+# Test locally...
+```
+
+3. **Commit and push**:
+```bash
+git add .
+git commit -m "feat: Add new feature"
+git push origin main
+```
+
+4. **Deploy to production**:
+```bash
+cd /home/josejordan/apps/builder
+./deploy.sh
+```
+
+### Verification
+
+After deployment, verify everything works:
+
+```bash
+# Check container status
+cd /home/josejordan/apps/builder/server
+docker compose ps
+
+# Check logs
+docker compose logs --tail=50
+
+# Test health endpoint
+curl https://builder.josejordan.dev/health
+
+# Verify git repository
+cd /home/josejordan/apps/builder
+git status
+git log -1
+```
+
+### Quick Commands Reference
+
+```bash
+# Deploy latest changes
+cd /home/josejordan/apps/builder && ./deploy.sh
+
+# View logs
+cd /home/josejordan/apps/builder/server && docker compose logs -f
+
+# Restart without rebuild
+cd /home/josejordan/apps/builder/server && docker compose restart
+
+# Check git status
+cd /home/josejordan/apps/builder && git status
+
+# Rollback to previous commit
+cd /home/josejordan/apps/builder && git checkout <commit-hash> && ./deploy.sh
+```
+
+### Migration Summary
+
+| Action | Date | Commit | Status |
+|--------|------|--------|--------|
+| Convert to git repository | Jan 2, 2026 | - | ✅ Complete |
+| Create deploy scripts | Jan 2, 2026 | - | ✅ Complete |
+| Test deployment | Jan 2, 2026 | - | ✅ Verified |
+| Production running | Jan 2, 2026 | 5a96e7f | ✅ Active |
+
+**Production Status**: ✅ Running with git-based deployment
+**Last Deployment**: January 2, 2026
+**Current Commit**: 5a96e7f - feat: Add LocalBuildService for local Android builds

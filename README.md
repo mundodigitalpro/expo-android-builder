@@ -207,6 +207,63 @@ These are automatically initialized on first launch.
 - ⏳ **Phase 4**: UI Refinement (Dark mode, animations, enhanced design)
 - 📋 **Phase 5**: Testing & Polish (Test suite, docs, optimization)
 
+## Production Deployment
+
+### VPS Deployment (Recommended)
+
+The backend can be deployed to a VPS for production use. Current production instance:
+- **URL**: https://builder.josejordan.dev
+- **Platform**: Hetzner Cloud VPS (Ubuntu 24.04)
+- **Containerization**: Docker with Docker Compose
+- **Reverse Proxy**: Nginx with Let's Encrypt SSL
+
+#### Quick Deploy
+
+1. **Clone repository on VPS**:
+```bash
+cd /home/josejordan/apps
+git clone https://github.com/mundodigitalpro/expo-android-builder.git builder
+```
+
+2. **Configure environment**:
+```bash
+cd builder/server
+cp .env.example .env
+# Edit .env with production values
+```
+
+3. **Deploy**:
+```bash
+cd /home/josejordan/apps/builder
+./deploy.sh
+```
+
+#### Deployment Workflow
+
+```
+Development (Termux)    →    GitHub    →    Production (VPS)
+─────────────────────        ──────         ────────────────
+1. Develop & test            2. Push        3. Deploy
+   locally                      code           ./deploy.sh
+```
+
+**Deploy Script** (`deploy.sh`) automatically:
+- Pulls latest changes from git
+- Stops running containers
+- Rebuilds Docker image
+- Starts containers in detached mode
+- Shows recent logs
+
+#### Update Production
+
+After pushing changes to GitHub:
+```bash
+cd /home/josejordan/apps/builder
+./deploy.sh
+```
+
+For complete VPS deployment instructions, see [`docs/DEPLOYMENT_VPS.md`](docs/DEPLOYMENT_VPS.md).
+
 ## Troubleshooting
 
 ### Server Not Responding

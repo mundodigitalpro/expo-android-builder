@@ -1,8 +1,8 @@
 # Estado del Desarrollo - Expo Android Builder
-**Fecha:** 31 de Diciembre 2024
-**Última actualización:** 19:08
+**Fecha:** 2 de Enero 2026
+**Última actualización:** 11:30
 **Desarrollador:** josejordandev
-**Entorno:** Termux/Android
+**Entorno:** Termux/Android + VPS Hetzner (Producción)
 
 ---
 
@@ -465,6 +465,18 @@ expo-app-builder-workspace/
 ---
 
 ## Changelog
+
+### 2 Enero 2026 - 11:20
+- 🔧 **MEJORA DESPLIEGUE:** Sistema de despliegue basado en Git
+  - Convertido `/apps/builder` de copia manual a clon git
+  - Nuevo workflow: desarrollo → git push → git pull → deploy
+  - Scripts de despliegue automatizados (`deploy.sh`)
+  - Backup automático de configuración (.env)
+  - Comandos simplificados: `cd /apps/builder && ./deploy.sh`
+  - Mejor trazabilidad con commits de git
+  - Rollback fácil con `git checkout`
+  - Documentado en `docs/DEPLOYMENT_VPS.md`
+  - Commit: Pendiente de push
 
 ### 31 Diciembre 2024 - 14:00
 - 🎯 **DECISIÓN ARQUITECTÓNICA:** Migración a VPS Hetzner propio
