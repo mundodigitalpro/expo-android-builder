@@ -1,6 +1,8 @@
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
 const fs = require('fs').promises;
+const { promisify } = require('util');
+const execAsync = promisify(exec);
 const logger = require('../utils/logger');
 const { PROJECTS_BASE_PATH } = require('../config/constants');
 
@@ -116,15 +118,17 @@ class LocalBuildService {
                 });
             }
 
-            const prebuildProcess = spawn('/bin/sh', ['-c', 'npx expo prebuild --platform android --clean'], {
-                cwd: projectPath,
-                env: {
-                    ...process.env,
-                    ANDROID_HOME: this.androidHome,
-                    JAVA_HOME: this.javaHome,
-                    PATH: `/usr/local/bin:/usr/bin:/bin:${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:${process.env.PATH || ''}`
-                }
-            });
+            const env = {
+                ...process.env,
+                ANDROID_HOME: this.androidHome,
+                JAVA_HOME: this.javaHome,
+                PATH: `/usr/local/bin:/usr/bin:/bin:${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:${process.env.PATH || ''}`
+            };
+
+            const prebuildProcess = exec(
+                'npx expo prebuild --platform android --clean',
+                { cwd: projectPath, env, maxBuffer: 50 * 1024 * 1024 }
+            );
 
             let errorOutput = '';
 
@@ -196,15 +200,17 @@ class LocalBuildService {
                 });
             }
 
-            const gradleProcess = spawn('/bin/sh', ['-c', `./gradlew ${gradleTask} --no-daemon`], {
-                cwd: androidPath,
-                env: {
-                    ...process.env,
-                    ANDROID_HOME: this.androidHome,
-                    JAVA_HOME: this.javaHome,
-                    PATH: `${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:/usr/local/bin:/usr/bin:/bin:${process.env.PATH || ''}`
-                }
-            });
+            const env = {
+                ...process.env,
+                ANDROID_HOME: this.androidHome,
+                JAVA_HOME: this.javaHome,
+                PATH: `${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:/usr/local/bin:/usr/bin:/bin:${process.env.PATH || ''}`
+            };
+
+            const gradleProcess = exec(
+                `./gradlew ${gradleTask} --no-daemon`,
+                { cwd: androidPath, env, maxBuffer: 50 * 1024 * 1024 }
+            );
 
             let errorOutput = '';
 
