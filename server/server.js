@@ -10,6 +10,7 @@ const errorHandler = require('./src/middleware/errorHandler');
 const projectsRouter = require('./src/routes/projects');
 const claudeRouter = require('./src/routes/claude');
 const buildsRouter = require('./src/routes/builds');
+const localBuildsRouter = require('./src/routes/localBuilds');
 
 const app = express();
 const server = http.createServer(app);
@@ -35,6 +36,7 @@ app.get('/health', (req, res) => {
 app.use('/api/projects', authMiddleware, projectsRouter);
 app.use('/api/claude', authMiddleware, claudeRouter);
 app.use('/api/builds', authMiddleware, buildsRouter);
+app.use('/api/local-builds', authMiddleware, localBuildsRouter);
 
 io.on('connection', (socket) => {
   logger.info('Client connected', { socketId: socket.id });
