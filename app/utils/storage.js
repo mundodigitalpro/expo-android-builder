@@ -36,10 +36,10 @@ export const storage = {
 
   async getServerUrl() {
     try {
-      return await AsyncStorage.getItem('server_url') || 'http://localhost:3001';
+      return await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
     } catch (error) {
       console.error('Error getting server URL:', error);
-      return 'http://localhost:3001';
+      return 'https://builder.josejordan.dev';
     }
   },
 };

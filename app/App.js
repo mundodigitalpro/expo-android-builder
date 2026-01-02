@@ -35,7 +35,7 @@ export default function App() {
 
       const serverUrl = await storage.getServerUrl();
       if (!serverUrl) {
-        await storage.setServerUrl('http://localhost:3001');
+        await storage.setServerUrl('https://builder.josejordan.dev');
       }
 
       // 2. Verificar disponibilidad del servidor

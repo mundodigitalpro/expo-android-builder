@@ -1,10 +1,13 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// Función para obtener la URL base dinámicamente
+const getBaseURL = async () => {
+  const serverUrl = await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
+  return `${serverUrl}/api`;
+};
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
   timeout: 180000, // 3 minutos para operaciones largas como crear proyectos
   headers: {
     'Content-Type': 'application/json',
@@ -13,6 +16,10 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
+    // Obtener URL base dinámicamente en cada request
+    const baseURL = await getBaseURL();
+    config.baseURL = baseURL;
+
     const token = await AsyncStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -77,6 +84,9 @@ export const localBuildsApi = {
     api.get(`/local-builds/download/${buildId}`),
 };
 
-export const healthCheck = () => axios.get('http://localhost:3001/health');
+export const healthCheck = async () => {
+  const serverUrl = await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
+  return axios.get(`${serverUrl}/health`);
+};
 
 export default api;
