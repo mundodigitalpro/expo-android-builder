@@ -30,7 +30,7 @@ export default function App() {
       // 1. Configuración inicial
       const token = await storage.getAuthToken();
       if (!token) {
-        await storage.setAuthToken('expo-builder-token-2024-secure');
+        await storage.setAuthToken('expo-builder-vps-2024-secure-token-MTc2NzIwNjIwMwo=');
       }
 
       const serverUrl = await storage.getServerUrl();
