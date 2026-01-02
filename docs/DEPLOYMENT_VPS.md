@@ -984,4 +984,68 @@ cd /home/josejordan/apps/builder && git checkout <commit-hash> && ./deploy.sh
 
 **Production Status**: ✅ Running with git-based deployment
 **Last Deployment**: January 2, 2026
-**Current Commit**: 5a96e7f - feat: Add LocalBuildService for local Android builds
+**Current Commit**: bf66c8a - fix: Use /bin/sh for spawn and add bash to Dockerfile
+
+---
+
+## ✅ Local Build System - January 2, 2026
+
+### Feature: Local Android Builds (Non-EAS)
+
+The system now supports building Android APKs locally on the VPS using the installed Android SDK and Java JDK, without relying on EAS Cloud.
+
+| Component | Status | Detail |
+|-----------|--------|---------|
+| **Service** | ✅ Active | `LocalBuildService.js` using `expo prebuild` + `gradlew assembleDebug` |
+| **Streaming** | ✅ Active | Real-time output via Socket.io |
+| **NDK** | ✅ Installed | Version `27.1.12297006` |
+| **Shell** | ✅ Fixed | Using `/bin/sh -c` for spawn compatibility |
+
+### NDK Requirement & Installation
+
+Local builds require the Android NDK. Since the SDK is mounted from the host, the NDK should be installed in the host's SDK directory.
+
+**Requirements**:
+- **NDK Version**: `27.1.12297006`
+- **Disk Space**: ~1.3 GB additional
+
+**Installation Steps (on VPS Host)**:
+1. Temporarily change SDK mount to read-write in `docker-compose.yml`:
+   ```yaml
+   volumes:
+     - /opt/android-sdk:/opt/android-sdk:rw  # Changed from :ro
+   ```
+2. Restart container: `docker compose down && docker compose up -d`
+3. Install NDK via container's sdkmanager:
+   ```bash
+   docker exec expo-builder sdkmanager "ndk;27.1.12297006"
+   ```
+4. Verify installation:
+   ```bash
+   ls /opt/android-sdk/ndk/27.1.12297006/
+   ```
+5. (Optional) Revert mount to `:ro` for security.
+
+### Local Build API Endpoints
+
+All endpoints require `Authorization: Bearer <token>`.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| **POST** | `/api/local-builds/start` | Start build (params: `projectPath`, `buildType`) |
+| **GET** | `/api/local-builds/status/:id` | Check build progress |
+| **GET** | `/api/local-builds/list` | List all local builds |
+| **POST** | `/api/local-builds/cancel` | Cancel running build |
+| **GET** | `/api/local-builds/download/:id` | Download generated APK |
+
+### Final Verification Result
+
+- **Build ID**: `local-1767354642115-8pmjh`
+- **Result**: ✅ Success
+- **Time**: ~15 minutes
+- **APK Location**: `.../android/app/build/outputs/apk/debug/app-debug.apk`
+
+---
+
+**Current Status**: 🚀 FULLY OPERATIONAL (EAS + Local Builds)
+**Last Update**: January 2, 2026 (13:50)
