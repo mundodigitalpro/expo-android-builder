@@ -95,10 +95,16 @@ export default function BuildStatusScreen({ route }) {
     initializeSocket();
 
     return () => {
+      // EAS build events
       socketService.off('build:output');
       socketService.off('build:error');
       socketService.off('build:queued');
       socketService.off('build:complete');
+      // Local build events
+      socketService.off('local-build:started');
+      socketService.off('local-build:output');
+      socketService.off('local-build:complete');
+      socketService.off('local-build:error');
     };
   }, []);
 
@@ -106,10 +112,17 @@ export default function BuildStatusScreen({ route }) {
     try {
       await socketService.connect();
 
+      // EAS build event listeners
       socketService.on('build:output', handleBuildOutput);
       socketService.on('build:error', handleBuildError);
       socketService.on('build:queued', handleBuildQueued);
       socketService.on('build:complete', handleBuildComplete);
+
+      // Local build event listeners
+      socketService.on('local-build:started', handleLocalBuildStarted);
+      socketService.on('local-build:output', handleLocalBuildOutput);
+      socketService.on('local-build:complete', handleLocalBuildComplete);
+      socketService.on('local-build:error', handleLocalBuildError);
     } catch (error) {
       console.error('Error connecting to WebSocket:', error);
     }
@@ -219,6 +232,80 @@ export default function BuildStatusScreen({ route }) {
         'Failed to submit build. Check the progress messages for details.'
       );
     }
+  };
+
+  // Local build event handlers
+  const handleLocalBuildStarted = (data) => {
+    console.log('Local build started:', data);
+    setBuildProgress('🚀 Local VPS build started...');
+  };
+
+  const handleLocalBuildOutput = (data) => {
+    console.log('Local build output:', data);
+    const { phase, message } = data;
+
+    // Update progress based on phase
+    if (phase === 'prebuild') {
+      setBuildProgress('📱 Running expo prebuild...');
+    } else if (phase === 'gradle') {
+      setBuildProgress('🔨 Building with Gradle...');
+    } else if (message) {
+      // Show the message if it contains useful info
+      if (message.includes('BUILD SUCCESSFUL')) {
+        setBuildProgress('✅ Gradle build successful!');
+      } else if (message.includes('Downloading')) {
+        setBuildProgress('📥 Downloading dependencies...');
+      } else if (message.includes('Compiling')) {
+        setBuildProgress('⚙️ Compiling...');
+      } else if (message.includes('Task')) {
+        // Extract task name from message like ":app:assembleDebug"
+        const taskMatch = message.match(/:[\w:]+/);
+        if (taskMatch) {
+          setBuildProgress(`🔧 ${taskMatch[0]}`);
+        }
+      }
+    }
+  };
+
+  const handleLocalBuildComplete = (data) => {
+    console.log('Local build complete:', data);
+    const finalElapsed = elapsedTime;
+    setActiveBuildId(null);
+    setLoading(false);
+    setBuildStartTime(null);
+
+    setBuildProgress(`✅ Build completed in ${formatTime(finalElapsed)}`);
+    Alert.alert(
+      '🎉 Build Complete',
+      `Your local VPS build completed successfully in ${formatTime(finalElapsed)}!\n\nAPK: ${data.apkPath}`,
+      [
+        { text: 'OK' },
+        {
+          text: 'Download APK',
+          onPress: () => {
+            if (data.downloadUrl) {
+              Linking.openURL(`${data.downloadUrl}`);
+            }
+          }
+        },
+      ]
+    );
+
+    loadBuilds();
+  };
+
+  const handleLocalBuildError = (data) => {
+    console.error('Local build error:', data);
+    const finalElapsed = elapsedTime;
+    setActiveBuildId(null);
+    setLoading(false);
+    setBuildStartTime(null);
+
+    setBuildProgress(`❌ Build failed after ${formatTime(finalElapsed)}`);
+    Alert.alert(
+      'Build Failed',
+      data.error || 'Local VPS build failed. Check the progress messages for details.'
+    );
   };
 
   const [warning, setWarning] = useState(null);
