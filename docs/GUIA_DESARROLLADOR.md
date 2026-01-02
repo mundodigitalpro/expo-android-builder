@@ -212,6 +212,21 @@ Todo sin necesidad de una computadora.
 - ✅ `README.md` (app y server)
 - ✅ `GUIA_DESARROLLADOR.md` (este archivo)
 
+### Backend de Build Local (VPS) - Fase 3 (Backend Completado)
+1. ✅ **LocalBuildService.js**:
+   - Compilación nativa de Android (`expo prebuild` + `gradle`)
+   - Gestión de procesos con `child_process`
+   - Streaming de logs via WebSocket
+2. ✅ **Infraestructura VPS**:
+   - Android SDK y NDK (v27.x) configurados
+   - Variables de entorno `ANDROID_HOME` y `JAVA_HOME`
+3. ✅ **API Endpoints**:
+   - `POST /api/local-builds/start`
+   - `GET /api/local-builds/status/:id`
+   - `GET /api/local-builds/download/:id`
+   
+**Nota**: La integración en el Frontend (BuildStatusScreen) está pendiente.
+
 ---
 
 ## 🚧 Lo que queda por hacer (Fases 2-5)

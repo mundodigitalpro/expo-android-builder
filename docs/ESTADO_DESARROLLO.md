@@ -154,9 +154,9 @@ APK/AAB descargable
 
 ---
 
-## ✅ Phase 3: EAS Build Integration (COMPLETADA - 30 Dic 2024)
+## ✅ Phase 3: EAS Build & Local VPS Build (COMPLETADA)
 
-**Backend:**
+**Backend (EAS Cloud + Local VPS):**
 - ✅ `EASService.js` - Servicio completo para builds con EAS CLI
   - `startBuild()` - Inicia builds (Android/iOS)
   - `listBuilds()` - Lista builds con manejo robusto de errores
@@ -165,13 +165,18 @@ APK/AAB descargable
   - `initProject()` - Inicializa proyecto EAS automáticamente
   - WebSocket streaming para progreso en tiempo real
   - Fix: `EAS_SKIP_AUTO_FINGERPRINT=1` para compatibilidad Termux
-  
 - ✅ `routes/builds.js` - Rutas API completas
 - ✅ `ProjectService.js` mejorado:
   - Auto-configura `app.json` con `android.package`, `owner`
   - Auto-crea `eas.json` con perfiles de build
   - Nuevos proyectos listos para EAS desde el primer momento
-
+- ✅ **NUEVO:** `LocalBuildService.js` - Builds locales en VPS sin EAS Cloud
+  - `expo prebuild` para generar proyecto nativo
+  - `./gradlew assembleDebug` para compilar
+  - Soporte para NDK y Java 17
+- ✅ `routes/localBuilds.js` - Endpoints para proceso local
+- ✅ WebSocket streaming unificado
+  
 **Frontend:**
 - ✅ `BuildStatusScreen.js` - Pantalla de gestión de builds
   - Botón para iniciar builds Android/iOS
@@ -183,6 +188,9 @@ APK/AAB descargable
   - Botón "Download APK" cuando build termina
   - Link a EAS dashboard
   - Filtrado inteligente de mensajes (progress vs errors)
+  - (Parcial: funciona para EAS, pendiente integración Local)
+  - Botón "Build Preview"
+  - Lista de builds
   
 - ✅ `buildsApi` en `services/api.js`
 - ✅ ProjectCard con botón "🔨 Builds"
@@ -195,6 +203,9 @@ APK/AAB descargable
 - `GET /api/builds/list` - Listar builds
 - `GET /api/builds/info/:buildId` - Info de build activo
 - `POST /api/builds/init` - Inicializar proyecto EAS
+- `POST /api/local-builds/start` - Iniciar build local
+- `GET /api/local-builds/status/:id` - Estado
+- `GET /api/local-builds/download/:id` - Descargar APK
 
 **WebSocket Events:**
 - `build:output` - Output del proceso
@@ -227,7 +238,22 @@ APK/AAB descargable
 - **test-claude** - Build ID: `0e10e12e-be82-4d6a-b110-91f052c7c103` ✅
 - **hola-mundo** - Build enviado correctamente ✅
 
+**Hito (2 Ene 2026):**
+- ✅ Primer build local exitoso en VPS (15 min)
+- ✅ APK generado y verificable en `/app-builder-builds`
+
 ---
+
+## Changelog
+
+### 2 Enero 2026 - 16:50
+- 🚀 **HITO MAYOR:** Sistema de Build Local en VPS Completado
+  - Implementado `LocalBuildService` para compilar APKs nativamente en el VPS
+  - Eliminada dependencia obligatoria de EAS Cloud
+  - Instalado Android NDK (v27.1.12297006) en el Host
+  - Solucionados problemas de compatibilidad de Shell (`/bin/sh`) en Docker
+  - Documentado proceso completo en `DEPLOYMENT_VPS.md`
+  - Verificado: Build completo de `test-local-build` exitoso
 
 ## 🔲 Phase 4: UI Refinement (PENDIENTE)
 

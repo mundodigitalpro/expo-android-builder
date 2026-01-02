@@ -150,8 +150,23 @@ cat /data/data/com.termux/files/home/projects/expo-app-builder/README.md
 - Seguridad
 - WebSocket
 
+---
+
+### 🌍 Despliegue e Infraestructura
+
+#### 9. **DEPLOYMENT_VPS.md** ⭐ NUEVO
+**Para**: Configurar y desplegar en VPS (Producción)
+**Contenido**:
+- Guía de instalación de dependencias (Java, Android SDK, NDK)
+- Configuración de Docker y Docker Compose
+- Sistema de Build Local (LocalBuildService)
+- Nginx + SSL
+- Troubleshooting
+
+**Leer primero si**: Vas a administrar el servider VPS
+
 ```bash
-cat /data/data/com.termux/files/home/expo-app-builder-server/README.md
+cat docs/DEPLOYMENT_VPS.md
 ```
 
 ---
@@ -279,8 +294,9 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 | REPORTE_PRUEBAS.md | ~10 | Testing results | QA + Devs |
 | README.md (server) | ~3 | Docs backend | Backend devs |
 | README.md (app) | ~3 | Docs frontend | Frontend devs |
+| DEPLOYMENT_VPS.md | ~15 | Guía despliegue | DevOps/Admin |
 
-**Total de documentación**: ~105 páginas 📚
+**Total de documentación**: ~120 páginas 📚
 
 ---
 
