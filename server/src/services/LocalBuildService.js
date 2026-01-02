@@ -127,7 +127,12 @@ class LocalBuildService {
 
             const prebuildProcess = exec(
                 'npx expo prebuild --platform android --clean',
-                { cwd: projectPath, env, maxBuffer: 50 * 1024 * 1024 }
+                {
+                    cwd: projectPath,
+                    env,
+                    maxBuffer: 100 * 1024 * 1024, // Increased from 50MB to 100MB
+                    timeout: 10 * 60 * 1000 // 10 minutes timeout
+                }
             );
 
             let errorOutput = '';
@@ -164,13 +169,24 @@ class LocalBuildService {
                 if (code === 0) {
                     logger.info('Prebuild completed', { buildId });
                     resolve();
+                } else if (code === null) {
+                    // Process killed by timeout
+                    logger.error('Prebuild timeout', { buildId });
+                    reject(new Error('Prebuild timeout (exceeded 10 minutes). Check VPS resources and project configuration.'));
                 } else {
-                    reject(new Error(`Prebuild failed with code ${code}: ${errorOutput}`));
+                    logger.error('Prebuild failed', { buildId, code, lastError: errorOutput.slice(-1000) });
+                    reject(new Error(`Prebuild failed with code ${code}. Check logs for details.`));
                 }
             });
 
             prebuildProcess.on('error', (error) => {
-                reject(new Error(`Prebuild process error: ${error.message}`));
+                if (error.code === 'ETIMEDOUT') {
+                    logger.error('Prebuild timeout error', { buildId, error: error.message });
+                    reject(new Error('Prebuild timeout after 10 minutes. The project may be too complex or VPS resources may be insufficient.'));
+                } else {
+                    logger.error('Prebuild process error', { buildId, error: error.message });
+                    reject(new Error(`Prebuild process error: ${error.message}`));
+                }
             });
 
             // Store process reference for cancellation
@@ -186,7 +202,7 @@ class LocalBuildService {
      * Run Gradle build to create APK
      */
     async runGradleBuild(buildId, projectPath, buildType, socket) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             this.updateBuildStatus(buildId, 'gradle');
 
             const androidPath = path.join(projectPath, 'android');
@@ -200,6 +216,14 @@ class LocalBuildService {
                 });
             }
 
+            // Ensure gradlew is executable
+            try {
+                await fs.chmod(path.join(androidPath, 'gradlew'), 0o755);
+                logger.info('Set gradlew executable permissions', { buildId });
+            } catch (error) {
+                logger.warn('Could not set gradlew permissions', { buildId, error: error.message });
+            }
+
             const env = {
                 ...process.env,
                 ANDROID_HOME: this.androidHome,
@@ -208,8 +232,13 @@ class LocalBuildService {
             };
 
             const gradleProcess = exec(
-                `./gradlew ${gradleTask} --no-daemon`,
-                { cwd: androidPath, env, maxBuffer: 50 * 1024 * 1024 }
+                `./gradlew ${gradleTask} --no-daemon --stacktrace`,
+                {
+                    cwd: androidPath,
+                    env,
+                    maxBuffer: 100 * 1024 * 1024, // Increased from 50MB to 100MB
+                    timeout: 15 * 60 * 1000 // 15 minutes timeout
+                }
             );
 
             let errorOutput = '';
@@ -246,13 +275,29 @@ class LocalBuildService {
                 if (code === 0) {
                     logger.info('Gradle build completed', { buildId, gradleTask });
                     resolve();
+                } else if (code === null) {
+                    // Process killed by timeout
+                    logger.error('Gradle timeout', { buildId, gradleTask });
+                    reject(new Error('Gradle build timeout (exceeded 15 minutes). Check VPS resources, dependencies, or consider optimizing the project.'));
                 } else {
-                    reject(new Error(`Gradle build failed with code ${code}: ${errorOutput.slice(-500)}`));
+                    logger.error('Gradle build failed', {
+                        buildId,
+                        gradleTask,
+                        code,
+                        lastError: errorOutput.slice(-1000)
+                    });
+                    reject(new Error(`Gradle build failed with code ${code}. Check logs for details.`));
                 }
             });
 
             gradleProcess.on('error', (error) => {
-                reject(new Error(`Gradle process error: ${error.message}`));
+                if (error.code === 'ETIMEDOUT') {
+                    logger.error('Gradle timeout error', { buildId, error: error.message });
+                    reject(new Error('Gradle build timeout after 15 minutes. The build may be too complex or VPS may need more resources.'));
+                } else {
+                    logger.error('Gradle process error', { buildId, error: error.message });
+                    reject(new Error(`Gradle process error: ${error.message}`));
+                }
             });
 
             // Store process reference for cancellation
