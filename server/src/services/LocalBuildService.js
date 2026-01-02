@@ -116,9 +116,8 @@ class LocalBuildService {
                 });
             }
 
-            const prebuildProcess = spawn('npx', ['expo', 'prebuild', '--platform', 'android', '--clean'], {
+            const prebuildProcess = spawn('/bin/sh', ['-c', 'npx expo prebuild --platform android --clean'], {
                 cwd: projectPath,
-                shell: true,
                 env: {
                     ...process.env,
                     ANDROID_HOME: this.androidHome,
@@ -197,9 +196,8 @@ class LocalBuildService {
                 });
             }
 
-            const gradleProcess = spawn('./gradlew', [gradleTask, '--no-daemon'], {
+            const gradleProcess = spawn('/bin/sh', ['-c', `./gradlew ${gradleTask} --no-daemon`], {
                 cwd: androidPath,
-                shell: true,
                 env: {
                     ...process.env,
                     ANDROID_HOME: this.androidHome,
