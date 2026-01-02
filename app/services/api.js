@@ -45,8 +45,9 @@ api.interceptors.response.use(
 
 export const projectsApi = {
   list: () => api.get('/projects'),
-  create: (projectName, template = 'blank') =>
-    api.post('/projects', { projectName, template }),
+  create: (projectName, template = 'blank', async = true) =>
+    api.post('/projects', { projectName, template, async }),
+  getJobStatus: (jobId) => api.get(`/projects/status/${jobId}`),
   get: (projectName) => api.get(`/projects/${projectName}`),
   delete: (projectName) => api.delete(`/projects/${projectName}`),
 };

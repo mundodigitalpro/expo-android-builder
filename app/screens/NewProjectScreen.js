@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,132 @@ import {
 } from 'react-native';
 import { projectsApi } from '../services/api';
 import { validateProjectName } from '../utils/validators';
+import socketService from '../services/socket';
 
 export default function NewProjectScreen({ navigation }) {
   const [projectName, setProjectName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Job status tracking
+  const [jobId, setJobId] = useState(null);
+  const [jobStatus, setJobStatus] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState('');
+  const [outputLines, setOutputLines] = useState([]);
+
+  const pollingInterval = useRef(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval.current) {
+        clearInterval(pollingInterval.current);
+      }
+      // Disconnect socket listeners
+      socketService.off('project-job:started');
+      socketService.off('project-job:output');
+      socketService.off('project-job:complete');
+      socketService.off('project-job:error');
+    };
+  }, []);
+
+  // Setup Socket.io listeners when job starts
+  useEffect(() => {
+    if (!jobId) return;
+
+    const setupSocketListeners = async () => {
+      try {
+        await socketService.connect();
+
+        socketService.on('project-job:started', (data) => {
+          if (data.jobId === jobId) {
+            console.log('Job started:', data);
+          }
+        });
+
+        socketService.on('project-job:output', (data) => {
+          if (data.jobId === jobId) {
+            setOutputLines(prev => [...prev, data.message]);
+          }
+        });
+
+        socketService.on('project-job:complete', (data) => {
+          if (data.jobId === jobId) {
+            console.log('Job completed:', data);
+            setProgress(100);
+            setPhase('completed');
+            stopPolling();
+
+            // Show success and navigate back
+            setTimeout(() => {
+              Alert.alert('Éxito', `Proyecto "${projectName}" creado correctamente`, [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            }, 500);
+          }
+        });
+
+        socketService.on('project-job:error', (data) => {
+          if (data.jobId === jobId) {
+            console.error('Job failed:', data);
+            setPhase('failed');
+            stopPolling();
+            Alert.alert('Error', data.error || 'No se pudo crear el proyecto');
+            setLoading(false);
+          }
+        });
+
+      } catch (error) {
+        console.warn('Socket connection failed (will use polling):', error);
+      }
+    };
+
+    setupSocketListeners();
+  }, [jobId]);
+
+  const startPolling = (jobId) => {
+    // Poll every 2 seconds
+    pollingInterval.current = setInterval(async () => {
+      try {
+        const response = await projectsApi.getJobStatus(jobId);
+        const data = response.data;
+
+        setJobStatus(data.status);
+        setProgress(data.progress || 0);
+        setPhase(data.phase || '');
+
+        // Update output if available
+        if (data.recentOutput && data.recentOutput.length > 0) {
+          setOutputLines(prev => {
+            const newLines = [...prev, ...data.recentOutput];
+            return newLines.slice(-20); // Keep last 20 lines
+          });
+        }
+
+        // Stop polling if completed or failed
+        if (data.status === 'completed') {
+          stopPolling();
+          Alert.alert('Éxito', `Proyecto "${projectName}" creado correctamente`, [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+        } else if (data.status === 'failed') {
+          stopPolling();
+          Alert.alert('Error', data.error || 'No se pudo crear el proyecto');
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error polling job status:', error);
+      }
+    }, 2000);
+  };
+
+  const stopPolling = () => {
+    if (pollingInterval.current) {
+      clearInterval(pollingInterval.current);
+      pollingInterval.current = null;
+    }
+  };
 
   const handleCreateProject = async () => {
     const validationError = validateProjectName(projectName);
@@ -26,19 +147,51 @@ export default function NewProjectScreen({ navigation }) {
 
     setLoading(true);
     setError('');
+    setProgress(0);
+    setPhase('initializing');
+    setOutputLines([]);
 
     try {
-      await projectsApi.create(projectName, 'blank');
-      Alert.alert('Éxito', `Proyecto "${projectName}" creado correctamente`, [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      // Call async endpoint
+      const response = await projectsApi.create(projectName, 'blank', true); // async=true
+      const data = response.data;
+
+      console.log('Project creation job started:', data);
+      setJobId(data.jobId);
+      setJobStatus(data.status);
+
+      // Start polling for status
+      startPolling(data.jobId);
+
     } catch (error) {
       const errorMessage =
-        error.response?.data?.error || 'No se pudo crear el proyecto';
+        error.response?.data?.error || 'No se pudo iniciar la creación del proyecto';
       Alert.alert('Error', errorMessage);
       console.error('Error creating project:', error);
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const getPhaseMessage = () => {
+    switch (phase) {
+      case 'initializing':
+        return 'Inicializando...';
+      case 'creating':
+        return 'Creando proyecto Expo...';
+      case 'git-init':
+        return 'Inicializando repositorio Git...';
+      case 'config':
+        return 'Configurando app.json...';
+      case 'eas-config':
+        return 'Creando configuración EAS...';
+      case 'metadata':
+        return 'Guardando metadatos...';
+      case 'completed':
+        return '¡Proyecto creado exitosamente!';
+      case 'failed':
+        return 'Error al crear proyecto';
+      default:
+        return 'Procesando...';
     }
   };
 
@@ -76,13 +229,51 @@ export default function NewProjectScreen({ navigation }) {
           </Text>
         </View>
 
+        {/* Progress Bar and Status */}
+        {loading && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressLabel}>{getPhaseMessage()}</Text>
+              <Text style={styles.progressPercent}>{Math.round(progress)}%</Text>
+            </View>
+
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
+            </View>
+
+            <Text style={styles.progressSubtext}>
+              Este proceso puede tardar 1-2 minutos...
+            </Text>
+
+            {/* Output console (last few lines) */}
+            {outputLines.length > 0 && (
+              <View style={styles.outputContainer}>
+                <Text style={styles.outputTitle}>Actividad reciente:</Text>
+                <ScrollView
+                  style={styles.outputScroll}
+                  nestedScrollEnabled={true}
+                >
+                  {outputLines.slice(-5).map((line, index) => (
+                    <Text key={index} style={styles.outputLine} numberOfLines={2}>
+                      {line}
+                    </Text>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        )}
+
         <Pressable
           style={[styles.button, loading && styles.buttonDisabled]}
           onPress={handleCreateProject}
           disabled={loading}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
+          {loading && progress < 100 ? (
+            <View style={styles.buttonContent}>
+              <ActivityIndicator color="#fff" size="small" style={styles.buttonSpinner} />
+              <Text style={styles.buttonText}>Creando... {Math.round(progress)}%</Text>
+            </View>
           ) : (
             <Text style={styles.buttonText}>Crear Proyecto</Text>
           )}
@@ -173,6 +364,69 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  progressContainer: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  progressPercent: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#007AFF',
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+    borderRadius: 4,
+  },
+  progressSubtext: {
+    fontSize: 13,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  outputContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  outputTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 6,
+  },
+  outputScroll: {
+    maxHeight: 100,
+  },
+  outputLine: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: '#555',
+    marginBottom: 2,
+  },
   button: {
     backgroundColor: '#007AFF',
     padding: 16,
@@ -182,6 +436,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonSpinner: {
+    marginRight: 8,
   },
   buttonText: {
     color: '#fff',
