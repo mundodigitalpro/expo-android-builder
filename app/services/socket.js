@@ -26,7 +26,7 @@ class SocketService {
         if (!url) {
           url = await AsyncStorage.getItem('server_url');
           if (!url) {
-            url = 'http://localhost:3001';
+            url = 'https://builder.josejordan.dev';
           }
         }
 
