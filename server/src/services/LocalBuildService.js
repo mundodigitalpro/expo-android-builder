@@ -118,10 +118,12 @@ class LocalBuildService {
 
             const prebuildProcess = spawn('npx', ['expo', 'prebuild', '--platform', 'android', '--clean'], {
                 cwd: projectPath,
+                shell: true,
                 env: {
                     ...process.env,
                     ANDROID_HOME: this.androidHome,
-                    JAVA_HOME: this.javaHome
+                    JAVA_HOME: this.javaHome,
+                    PATH: `/usr/local/bin:/usr/bin:/bin:${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:${process.env.PATH || ''}`
                 }
             });
 
@@ -197,11 +199,12 @@ class LocalBuildService {
 
             const gradleProcess = spawn('./gradlew', [gradleTask, '--no-daemon'], {
                 cwd: androidPath,
+                shell: true,
                 env: {
                     ...process.env,
                     ANDROID_HOME: this.androidHome,
                     JAVA_HOME: this.javaHome,
-                    PATH: `${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:${process.env.PATH}`
+                    PATH: `${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:/usr/local/bin:/usr/bin:/bin:${process.env.PATH || ''}`
                 }
             });
 
