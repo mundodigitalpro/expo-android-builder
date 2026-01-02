@@ -27,10 +27,13 @@ export default function App() {
 
   const initializeApp = async () => {
     try {
-      // 1. Configuración inicial
-      const token = await storage.getAuthToken();
-      if (!token) {
-        await storage.setAuthToken('expo-builder-vps-2024-secure-token-MTc2NzIwNjIwMwo=');
+      // 1. Configuración inicial - Forzar actualización de token
+      const currentToken = await storage.getAuthToken();
+      const correctToken = 'expo-builder-vps-2024-secure-token-MTc2NzIwNjIwMwo=';
+
+      // Actualizar si no existe o si es el token viejo
+      if (!currentToken || currentToken === 'expo-builder-token-2024-secure') {
+        await storage.setAuthToken(correctToken);
       }
 
       const serverUrl = await storage.getServerUrl();
