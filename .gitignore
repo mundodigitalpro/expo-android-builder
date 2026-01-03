@@ -147,3 +147,7 @@ test-projects/
 
 # System files
 .cache/
+
+# Android signing keys - DO NOT COMMIT
+*.keystore
+keystore.base64.txt

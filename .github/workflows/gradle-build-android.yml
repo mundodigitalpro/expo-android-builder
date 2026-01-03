@@ -1,0 +1,122 @@
+name: Android Native Build (Gradle)
+
+on:
+  # Trigger manual desde GitHub UI
+  workflow_dispatch:
+    inputs:
+      project_path:
+        description: 'Ruta del proyecto a compilar (ej: app para compilar /app)'
+        required: true
+        default: 'app'
+        type: string
+      build_type:
+        description: 'Tipo de build'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
+
+  # Trigger automático en push a main (opcional, comentado)
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'app/**'
+  #     - 'projects/**'
+
+jobs:
+  build:
+    name: Build APK con Gradle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ${{ github.event.inputs.project_path }}/package-lock.json
+
+      - name: ☕ Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: 📦 Install npm dependencies
+        working-directory: ${{ github.event.inputs.project_path }}
+        run: npm ci
+
+      - name: 🔧 Expo Prebuild (generar carpeta android/)
+        working-directory: ${{ github.event.inputs.project_path }}
+        run: npx expo prebuild --platform android --clean
+
+      - name: 📝 Make gradlew executable
+        working-directory: ${{ github.event.inputs.project_path }}/android
+        run: chmod +x gradlew
+
+      - name: 🔑 Setup signing keys (solo para release)
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        working-directory: ${{ github.event.inputs.project_path }}/android
+        run: |
+          # Crear keystore desde base64
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+
+          # Configurar gradle.properties con signing config
+          cat >> gradle.properties << EOF
+          MYAPP_UPLOAD_STORE_FILE=release.keystore
+          MYAPP_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+          MYAPP_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_STORE_PASSWORD }}
+          MYAPP_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+      - name: 🔨 Build APK
+        working-directory: ${{ github.event.inputs.project_path }}/android
+        run: |
+          if [ "${{ github.event.inputs.build_type }}" == "release" ]; then
+            ./gradlew assembleRelease --no-daemon --stacktrace
+          else
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          fi
+
+      - name: 📤 Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ github.event.inputs.build_type }}-${{ github.run_number }}.apk
+          path: ${{ github.event.inputs.project_path }}/android/app/build/outputs/apk/${{ github.event.inputs.build_type }}/*.apk
+          retention-days: 90
+
+      - name: 📊 Build Summary
+        run: |
+          echo "✅ Build completado exitosamente!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tipo**: ${{ github.event.inputs.build_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Proyecto**: ${{ github.event.inputs.project_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📥 [Descargar APK](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🎉 Create GitHub Release (opcional, solo release)
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.event.inputs.project_path }}/android/app/build/outputs/apk/release/*.apk
+          tag_name: ${{ github.event.inputs.project_path }}-v${{ github.run_number }}
+          name: ${{ github.event.inputs.project_path }} - Release v${{ github.run_number }}
+          body: |
+            Build automático de ${{ github.event.inputs.project_path }}
+
+            - Tipo: Release
+            - Run: #${{ github.run_number }}
+            - Fecha: ${{ github.event.head_commit.timestamp }}
+
+            📥 APK disponible en los artifacts de abajo.
+          draft: false
+          prerelease: false
