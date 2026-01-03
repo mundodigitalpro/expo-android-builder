@@ -11,7 +11,7 @@ import {
   Animated,
 } from 'react-native';
 import socketService from '../services/socket';
-import { buildsApi, localBuildsApi } from '../services/api';
+import { buildsApi, localBuildsApi, githubActionsApi } from '../services/api';
 
 // Build type configuration
 const BUILD_TYPES = {
@@ -28,6 +28,13 @@ const BUILD_TYPES = {
     description: 'Builds nativos en el VPS',
     icon: '🖥️',
     color: '#4CAF50',
+  },
+  GITHUB: {
+    id: 'GITHUB',
+    name: 'GitHub Actions',
+    description: 'Builds ilimitados en GitHub',
+    icon: '⚡',
+    color: '#9333EA',
   },
 };
 
@@ -106,7 +113,7 @@ export default function BuildStatusScreen({ route }) {
       socketService.off('local-build:complete');
       socketService.off('local-build:error');
     };
-  }, []);
+  }, [buildType]); // Reload builds when build type changes
 
   const initializeSocket = async () => {
     try {
@@ -315,18 +322,41 @@ export default function BuildStatusScreen({ route }) {
     try {
       setRefreshing(true);
       setWarning(null);
-      const response = await buildsApi.list(project.path, 10);
 
-      // Handle both array response and object with builds, warning
-      if (Array.isArray(response.data)) {
-        setBuilds(response.data);
-      } else if (response.data?.builds !== undefined) {
-        setBuilds(response.data.builds);
-        if (response.data.warning) {
-          setWarning(response.data.warning);
-        }
+      if (buildType === 'GITHUB') {
+        // Load GitHub Actions runs
+        const response = await githubActionsApi.getRuns(10);
+        const runs = response.data.runs || [];
+
+        // Transform GitHub Actions runs to match the build card format
+        const transformedRuns = runs.map(run => ({
+          id: run.id.toString(),
+          platform: 'android',
+          status: run.status === 'completed'
+            ? (run.conclusion === 'success' ? 'finished' : run.conclusion)
+            : run.status === 'in_progress' ? 'in-progress' : run.status,
+          buildProfile: `GitHub Actions (#${run.runNumber})`,
+          createdAt: run.createdAt,
+          logsUrl: run.htmlUrl,
+          artifacts: run.conclusion === 'success' ? { buildUrl: run.htmlUrl } : null,
+        }));
+
+        setBuilds(transformedRuns);
       } else {
-        setBuilds([]);
+        // Load EAS builds (original logic)
+        const response = await buildsApi.list(project.path, 10);
+
+        // Handle both array response and object with builds, warning
+        if (Array.isArray(response.data)) {
+          setBuilds(response.data);
+        } else if (response.data?.builds !== undefined) {
+          setBuilds(response.data.builds);
+          if (response.data.warning) {
+            setWarning(response.data.warning);
+          }
+        } else {
+          setBuilds([]);
+        }
       }
     } catch (error) {
       console.error('Error loading builds:', error);
@@ -367,16 +397,22 @@ export default function BuildStatusScreen({ route }) {
       return;
     }
 
-    if (!socketService.isConnected()) {
+    // GitHub Actions doesn't require socket connection
+    if (buildType !== 'GITHUB' && !socketService.isConnected()) {
       Alert.alert('Connection Error', 'Not connected to server');
       return;
     }
 
     const buildConfig = BUILD_TYPES[buildType];
 
+    // GitHub Actions uses different terminology
+    const buildTypeLabel = buildType === 'GITHUB'
+      ? `Type: ${profile === 'preview' ? 'debug' : 'release'}`
+      : `Profile: "${profile}"`;
+
     Alert.alert(
       'Start Build',
-      `Start ${platform} build with ${buildConfig.name}?\n\nProfile: "${profile}"`,
+      `Start ${platform} build with ${buildConfig.name}?\n\n${buildTypeLabel}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -388,15 +424,39 @@ export default function BuildStatusScreen({ route }) {
               setElapsedTime(0);
               setBuildProgress(`🚀 Starting ${buildConfig.name} build...`);
 
-              // Use appropriate API based on build type
-              const api = buildType === 'EAS' ? buildsApi : localBuildsApi;
-              const result = await api.start(
-                project.path,
-                platform,
-                profile,
-                socketService.getSocketId()
-              );
-              setActiveBuildId(result.data.buildId);
+              if (buildType === 'GITHUB') {
+                // GitHub Actions build
+                const buildTypeGH = profile === 'preview' ? 'debug' : 'release';
+                const result = await githubActionsApi.trigger('app', buildTypeGH);
+
+                setLoading(false);
+                setBuildProgress(`✅ Build triggered on GitHub Actions`);
+
+                Alert.alert(
+                  '🎉 Build Triggered',
+                  `Your ${buildTypeGH} build has been queued on GitHub Actions.\n\nIt will take 10-15 minutes to complete.`,
+                  [
+                    { text: 'OK' },
+                    {
+                      text: 'View on GitHub',
+                      onPress: () => Linking.openURL(result.data.viewUrl)
+                    },
+                  ]
+                );
+
+                // Refresh builds list
+                loadBuilds();
+              } else {
+                // EAS or Local VPS build
+                const api = buildType === 'EAS' ? buildsApi : localBuildsApi;
+                const result = await api.start(
+                  project.path,
+                  platform,
+                  profile,
+                  socketService.getSocketId()
+                );
+                setActiveBuildId(result.data.buildId);
+              }
             } catch (error) {
               console.error('Error starting build:', error);
               Alert.alert(
@@ -404,6 +464,7 @@ export default function BuildStatusScreen({ route }) {
                 error.response?.data?.error || 'Failed to start build'
               );
               setLoading(false);
+              setBuildProgress(null);
             }
           },
         },
@@ -684,13 +745,13 @@ const styles = StyleSheet.create({
   },
   typeButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   typeButton: {
     flex: 1,
     borderWidth: 2,
     borderRadius: 12,
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
     backgroundColor: '#fff',
   },

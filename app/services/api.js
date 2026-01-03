@@ -85,6 +85,18 @@ export const localBuildsApi = {
     api.get(`/local-builds/download/${buildId}`),
 };
 
+export const githubActionsApi = {
+  // GitHub Actions builds
+  trigger: (projectPath, buildType) =>
+    api.post('/github-actions/trigger', { projectPath, buildType }),
+  getRuns: (limit = 10) =>
+    api.get('/github-actions/runs', { params: { limit } }),
+  getArtifacts: (runId) =>
+    api.get(`/github-actions/runs/${runId}/artifacts`),
+  getStatus: () =>
+    api.get('/github-actions/status'),
+};
+
 export const healthCheck = async () => {
   const serverUrl = await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
   return axios.get(`${serverUrl}/health`);
