@@ -36,6 +36,14 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      - name: 🔍 Verify project exists
+        run: |
+          if [ ! -d "${{ github.event.inputs.project_path }}" ]; then
+            echo "❌ Error: Project path not found"
+            exit 1
+          fi
+          echo "✅ Project found at ${{ github.event.inputs.project_path }}"
+
       - name: 🏗️ Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -98,12 +106,13 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Tipo**: ${{ github.event.inputs.build_type }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Proyecto**: ${{ github.event.inputs.project_path }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Run**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📥 [Descargar APK](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
 
       - name: 🎉 Create GitHub Release (opcional, solo release)
-        if: ${{ github.event.inputs.build_type == 'release' }}
+        if: ${{ github.event.inputs.build_type == 'release' && github.ref == 'refs/heads/main' }}
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ github.event.inputs.project_path }}/android/app/build/outputs/apk/release/*.apk

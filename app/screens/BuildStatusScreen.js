@@ -427,7 +427,10 @@ export default function BuildStatusScreen({ route }) {
               if (buildType === 'GITHUB') {
                 // GitHub Actions build
                 const buildTypeGH = profile === 'preview' ? 'debug' : 'release';
-                const result = await githubActionsApi.trigger('app', buildTypeGH);
+                const result = await githubActionsApi.buildUserProject(
+                  project.name,
+                  buildTypeGH
+                );
 
                 setLoading(false);
                 setBuildProgress(`✅ Build triggered on GitHub Actions`);

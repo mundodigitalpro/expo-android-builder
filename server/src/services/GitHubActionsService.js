@@ -30,11 +30,12 @@ class GitHubActionsService {
    * Trigger a GitHub Actions workflow
    * @param {string} projectPath - Path to project (e.g., 'app')
    * @param {string} buildType - Build type: 'debug' or 'release'
+   * @param {string} ref - Git ref (branch) to run the workflow on
    * @returns {Promise<object>} Workflow dispatch result
    */
-  async triggerBuild(projectPath, buildType = 'debug') {
+  async triggerBuild(projectPath, buildType = 'debug', ref = 'main') {
     try {
-      logger.info('Triggering GitHub Actions build', { projectPath, buildType });
+      logger.info('Triggering GitHub Actions build', { projectPath, buildType, ref });
 
       if (!this.githubToken) {
         throw new Error('GitHub token not configured. Set GITHUB_TOKEN in .env');
@@ -43,7 +44,7 @@ class GitHubActionsService {
       const response = await this.apiClient.post(
         `/repos/${this.repoOwner}/${this.repoName}/actions/workflows/${this.workflowFileName}/dispatches`,
         {
-          ref: 'main',
+          ref,
           inputs: {
             project_path: projectPath,
             build_type: buildType,
@@ -62,6 +63,7 @@ class GitHubActionsService {
         message: 'Build triggered successfully',
         projectPath,
         buildType,
+        ref,
       };
     } catch (error) {
       logger.error('Failed to trigger GitHub Actions build', {
@@ -202,6 +204,71 @@ class GitHubActionsService {
    */
   isConfigured() {
     return !!this.githubToken;
+  }
+
+  /**
+   * Delete a branch by name using GitHub API
+   * @param {string} branchName - Branch name (e.g., build/my-app-123)
+   * @returns {Promise<void>}
+   */
+  async deleteBranch(branchName) {
+    try {
+      if (!this.githubToken) {
+        throw new Error('GitHub token not configured. Set GITHUB_TOKEN in .env');
+      }
+
+      const encodedBranch = encodeURIComponent(branchName);
+      await this.apiClient.delete(
+        `/repos/${this.repoOwner}/${this.repoName}/git/refs/heads/${encodedBranch}`
+      );
+    } catch (error) {
+      logger.error('Failed to delete GitHub branch', {
+        branchName,
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error(
+        error.response?.data?.message ||
+        'Failed to delete GitHub branch'
+      );
+    }
+  }
+
+  /**
+   * List branches matching a prefix/pattern
+   * @param {string} pattern - Prefix to filter branches
+   * @returns {Promise<Array>} List of branches
+   */
+  async listBranches(pattern = 'build/') {
+    try {
+      if (!this.githubToken) {
+        throw new Error('GitHub token not configured. Set GITHUB_TOKEN in .env');
+      }
+
+      const response = await this.apiClient.get(
+        `/repos/${this.repoOwner}/${this.repoName}/branches`,
+        { params: { per_page: 100 } }
+      );
+
+      const branches = response.data
+        .map((branch) => ({
+          name: branch.name,
+          sha: branch.commit?.sha,
+          protected: branch.protected
+        }))
+        .filter((branch) => branch.name.startsWith(pattern));
+
+      return branches;
+    } catch (error) {
+      logger.error('Failed to list GitHub branches', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error(
+        error.response?.data?.message ||
+        'Failed to list GitHub branches'
+      );
+    }
   }
 }
 

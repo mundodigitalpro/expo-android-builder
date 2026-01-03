@@ -122,6 +122,8 @@ $RECYCLE.BIN/
 # Project-specific
 # Projects created by the builder (not versioned)
 builder-projects/
+# Temporary build staging area
+temp-builds/
 
 # Server PID file
 server/.pid

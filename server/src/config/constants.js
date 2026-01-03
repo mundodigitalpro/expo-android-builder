@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 
 module.exports = {
   PORT: process.env.PORT || 3001,
@@ -18,6 +19,14 @@ module.exports = {
     'git init',
     'git add',
     'git commit',
+    'git push',
+    'git checkout',
+    'git branch',
+    'git status',
+    'git remote',
+    'git rev-parse',
+    'git config',
+    'rsync',
     'npm install'
   ],
 
@@ -25,5 +34,8 @@ module.exports = {
     origin: '*',
     methods: ['GET', 'POST', 'DELETE', 'PUT'],
     credentials: true
-  }
+  },
+
+  TEMP_BUILDS_PATH: path.join(__dirname, '../../../temp-builds'),
+  MAX_TEMP_BRANCH_AGE_HOURS: 24
 };

@@ -95,6 +95,12 @@ export const githubActionsApi = {
     api.get(`/github-actions/runs/${runId}/artifacts`),
   getStatus: () =>
     api.get('/github-actions/status'),
+  buildUserProject: (projectName, buildType) =>
+    api.post('/github-actions/build-user-project', { projectName, buildType }),
+  prepareProject: (projectName) =>
+    api.post('/github-actions/prepare-project', { projectName }),
+  cleanupBranch: (branchName, projectName) =>
+    api.delete(`/github-actions/cleanup/${branchName}`, { params: { projectName } }),
 };
 
 export const healthCheck = async () => {
