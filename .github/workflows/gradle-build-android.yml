@@ -48,7 +48,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
       - name: 📦 Install npm dependencies
         working-directory: ${{ github.event.inputs.project_path }}
