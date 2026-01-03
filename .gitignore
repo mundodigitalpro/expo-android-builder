@@ -151,3 +151,4 @@ test-projects/
 # Android signing keys - DO NOT COMMIT
 *.keystore
 keystore.base64.txt
+DATOS_SENSIBLES_LOCAL.txt

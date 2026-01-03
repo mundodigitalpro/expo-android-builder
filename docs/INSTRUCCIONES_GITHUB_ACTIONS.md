@@ -3,6 +3,8 @@
 **Fecha**: 2026-01-03
 **Estado**: Configuración local completa - Falta subir a GitHub y configurar secrets
 
+**🔐 IMPORTANTE**: Los valores sensibles (passwords, alias, etc.) están guardados en el archivo local `DATOS_SENSIBLES_LOCAL.txt` que NO debe subirse a GitHub. Consulta ese archivo para los valores reales.
+
 ---
 
 ## 📋 Resumen
@@ -17,8 +19,8 @@ Este proyecto está configurado para hacer builds de Android de forma **ilimitad
 
 1. ✅ **Keystore generado** para firmar APKs
    - Archivo: `release.keystore` (NO SUBIR A GIT)
-   - Alias: `expo-android-builder`
-   - Password: `ExpoBuilder2024Secure!`
+   - Alias: `[TU_ALIAS_KEYSTORE]` (guardado en DATOS_SENSIBLES_LOCAL.txt)
+   - Password: `[TU_PASSWORD_KEYSTORE]` (guardado en DATOS_SENSIBLES_LOCAL.txt)
 
 2. ✅ **Keystore convertido a base64**
    - Archivo: `keystore.base64.txt` (NO SUBIR A GIT)
@@ -48,16 +50,16 @@ Este proyecto está configurado para hacer builds de Android de forma **ilimitad
    ```
    .github/workflows/gradle-build-android.yml
    ```
-4. Copiar contenido desde:
+4. Copiar contenido desde el archivo local en Termux:
    ```bash
-   cat /data/data/com.termux/files/home/expo-android-builder/.github/workflows/gradle-build-android.yml
+   cat .github/workflows/gradle-build-android.yml
    ```
 5. Scroll abajo > **Commit new file**
 
 #### Opción B: Push desde Termux (Requiere auth)
 
 ```bash
-cd /data/data/com.termux/files/home/expo-android-builder
+cd [RUTA_DEL_PROYECTO]
 
 # 1. Autenticar con scope workflow
 gh auth login -h github.com -p https -s repo -s workflow -s gist --web
@@ -97,8 +99,9 @@ Una vez que el workflow esté en GitHub:
 #### Secret 1: `ANDROID_KEYSTORE_BASE64`
 
 ```bash
-# En Termux, copiar TODO el contenido:
-cat /data/data/com.termux/files/home/expo-android-builder/keystore.base64.txt
+# En Termux, copiar TODO el contenido del archivo keystore.base64.txt
+# (Los valores reales están en DATOS_SENSIBLES_LOCAL.txt)
+cat keystore.base64.txt
 ```
 
 **Importante**: Es un texto MUY largo (varias líneas). Copiar TODO y pegarlo como valor del secret.
@@ -106,19 +109,19 @@ cat /data/data/com.termux/files/home/expo-android-builder/keystore.base64.txt
 #### Secret 2: `ANDROID_KEY_ALIAS`
 
 ```
-expo-android-builder
+[Ver DATOS_SENSIBLES_LOCAL.txt para el valor]
 ```
 
 #### Secret 3: `ANDROID_STORE_PASSWORD`
 
 ```
-ExpoBuilder2024Secure!
+[Ver DATOS_SENSIBLES_LOCAL.txt para el valor]
 ```
 
 #### Secret 4: `ANDROID_KEY_PASSWORD`
 
 ```
-ExpoBuilder2024Secure!
+[Ver DATOS_SENSIBLES_LOCAL.txt para el valor]
 ```
 
 **⚠️ IMPORTANTE**: Guarda estas contraseñas en un password manager. Si pierdes el keystore, no podrás actualizar tu app en Play Store.
@@ -241,8 +244,8 @@ Estos archivos están en `.gitignore` y NO deben ir al repositorio.
 **Verificar backup**:
 ```bash
 # Verificar que el keystore funciona
-keytool -list -v -keystore release.keystore -alias expo-android-builder
-# Password: ExpoBuilder2024Secure!
+keytool -list -v -keystore release.keystore -alias [TU_ALIAS_KEYSTORE]
+# Password: [Ver DATOS_SENSIBLES_LOCAL.txt]
 ```
 
 ---

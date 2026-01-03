@@ -1,5 +1,7 @@
 # GitHub Actions Setup - Pasos para Activar Builds Ilimitados
 
+**🔐 IMPORTANTE**: Los valores sensibles (passwords, alias, etc.) están guardados en el archivo local `DATOS_SENSIBLES_LOCAL.txt` que NO debe subirse a GitHub. Consulta ese archivo para los valores reales.
+
 ## 🚨 Estado Actual
 
 Los archivos están listos y commiteados localmente, pero necesitan ser subidos a GitHub.
@@ -45,16 +47,16 @@ git push origin main
 Luego en Termux:
 
 ```bash
-cd /data/data/com.termux/files/home/expo-android-builder
+cd [RUTA_DEL_PROYECTO]
 
 # Configurar el token
-git remote set-url origin https://TU_TOKEN@github.com/mundodigitalpro/expo-android-builder.git
+git remote set-url origin https://TU_TOKEN@github.com/[TU_USUARIO]/[TU_REPO].git
 
 # Push
 git push origin main
 
 # Opcional: Revertir a HTTPS normal después
-git remote set-url origin https://github.com/mundodigitalpro/expo-android-builder.git
+git remote set-url origin https://github.com/[TU_USUARIO]/[TU_REPO].git
 ```
 
 ## 🔐 Después del Push: Configurar GitHub Secrets
@@ -63,7 +65,7 @@ Una vez que el workflow esté en GitHub, sigue estos pasos:
 
 ### Paso 1: Ir a Settings
 
-1. Ve a: https://github.com/mundodigitalpro/expo-android-builder
+1. Ve a tu repositorio en GitHub
 2. Click en **Settings** (tab arriba)
 3. En el sidebar izquierdo: **Secrets and variables** > **Actions**
 
@@ -77,27 +79,29 @@ Copiar todo el contenido del archivo `keystore.base64.txt`:
 
 ```bash
 # En Termux, ejecutar:
-cat /data/data/com.termux/files/home/expo-android-builder/keystore.base64.txt
+cat keystore.base64.txt
 ```
 
 Copiar TODA la salida (será muy largo, varias líneas). Pegarlo como valor del secret.
 
+**Nota**: Los valores están guardados en `DATOS_SENSIBLES_LOCAL.txt` en tu máquina local.
+
 #### Secret 2: `ANDROID_KEY_ALIAS`
 
 ```
-expo-android-builder
+[Ver DATOS_SENSIBLES_LOCAL.txt para el valor]
 ```
 
 #### Secret 3: `ANDROID_STORE_PASSWORD`
 
 ```
-ExpoBuilder2024Secure!
+[Ver DATOS_SENSIBLES_LOCAL.txt para el valor]
 ```
 
 #### Secret 4: `ANDROID_KEY_PASSWORD`
 
 ```
-ExpoBuilder2024Secure!
+[Ver DATOS_SENSIBLES_LOCAL.txt para el valor]
 ```
 
 **IMPORTANTE**: Guarda estas contraseñas en un lugar seguro (password manager).
@@ -114,7 +118,7 @@ Deberías ver 4 secrets configurados:
 
 ### Primer Build de Prueba
 
-1. Ve a: https://github.com/mundodigitalpro/expo-android-builder/actions
+1. Ve a la sección Actions de tu repositorio en GitHub
 2. Click en **Android Native Build (Gradle)** en el sidebar
 3. Click en **Run workflow** (botón verde)
 4. Configurar inputs:
@@ -183,7 +187,7 @@ Puedes agregar un botón en BuildStatusScreen para triggear builds desde la app:
 
 ```javascript
 // Usar GitHub API para disparar workflow
-POST https://api.github.com/repos/mundodigitalpro/expo-android-builder/actions/workflows/gradle-build-android.yml/dispatches
+POST https://api.github.com/repos/[TU_USUARIO]/[TU_REPO]/actions/workflows/gradle-build-android.yml/dispatches
 ```
 
 Esto requeriría:
