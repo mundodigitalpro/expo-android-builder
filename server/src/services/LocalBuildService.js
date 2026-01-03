@@ -228,16 +228,18 @@ class LocalBuildService {
                 ...process.env,
                 ANDROID_HOME: this.androidHome,
                 JAVA_HOME: this.javaHome,
-                PATH: `${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:/usr/local/bin:/usr/bin:/bin:${process.env.PATH || ''}`
+                PATH: `${this.javaHome}/bin:${this.androidHome}/cmdline-tools/latest/bin:${this.androidHome}/platform-tools:/usr/local/bin:/usr/bin:/bin:${process.env.PATH || ''}`,
+                // Limit Gradle memory usage to prevent VPS from running out of RAM
+                GRADLE_OPTS: '-Xmx1536m -XX:+HeapDumpOnOutOfMemoryError'
             };
 
             const gradleProcess = exec(
-                `./gradlew ${gradleTask} --no-daemon --stacktrace`,
+                `./gradlew ${gradleTask} --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx1536m -XX:MaxMetaspaceSize=512m"`,
                 {
                     cwd: androidPath,
                     env,
                     maxBuffer: 100 * 1024 * 1024, // Increased from 50MB to 100MB
-                    timeout: 15 * 60 * 1000 // 15 minutes timeout
+                    timeout: 20 * 60 * 1000 // 20 minutes timeout (increased due to SWAP usage)
                 }
             );
 
@@ -278,7 +280,7 @@ class LocalBuildService {
                 } else if (code === null) {
                     // Process killed by timeout
                     logger.error('Gradle timeout', { buildId, gradleTask });
-                    reject(new Error('Gradle build timeout (exceeded 15 minutes). Check VPS resources, dependencies, or consider optimizing the project.'));
+                    reject(new Error('Gradle build timeout (exceeded 20 minutes). Check VPS resources, dependencies, or consider optimizing the project.'));
                 } else {
                     logger.error('Gradle build failed', {
                         buildId,
@@ -293,7 +295,7 @@ class LocalBuildService {
             gradleProcess.on('error', (error) => {
                 if (error.code === 'ETIMEDOUT') {
                     logger.error('Gradle timeout error', { buildId, error: error.message });
-                    reject(new Error('Gradle build timeout after 15 minutes. The build may be too complex or VPS may need more resources.'));
+                    reject(new Error('Gradle build timeout after 20 minutes. The build may be too complex or VPS may need more resources.'));
                 } else {
                     logger.error('Gradle process error', { buildId, error: error.message });
                     reject(new Error(`Gradle process error: ${error.message}`));
