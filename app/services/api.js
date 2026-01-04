@@ -89,8 +89,8 @@ export const githubActionsApi = {
   // GitHub Actions builds
   trigger: (projectPath, buildType) =>
     api.post('/github-actions/trigger', { projectPath, buildType }),
-  getRuns: (limit = 10) =>
-    api.get('/github-actions/runs', { params: { limit } }),
+  getRuns: ({ limit = 10, branch } = {}) =>
+    api.get('/github-actions/runs', { params: { limit, branch } }),
   getArtifacts: (runId) =>
     api.get(`/github-actions/runs/${runId}/artifacts`),
   getStatus: () =>

@@ -297,6 +297,7 @@ router.get('/temp-branches', async (req, res, next) => {
 router.get('/runs', async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
+    const branch = req.query.branch;
 
     if (!githubActionsService.isConfigured()) {
       return res.status(503).json({
@@ -304,7 +305,7 @@ router.get('/runs', async (req, res, next) => {
       });
     }
 
-    const runs = await githubActionsService.getWorkflowRuns(limit);
+    const runs = await githubActionsService.getWorkflowRuns(limit, branch);
 
     res.json({
       success: true,

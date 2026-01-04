@@ -80,23 +80,30 @@ class GitHubActionsService {
   /**
    * Get recent workflow runs
    * @param {number} limit - Number of runs to fetch (default: 10)
+   * @param {string} branch - Optional branch filter
    * @returns {Promise<Array>} List of workflow runs
    */
-  async getWorkflowRuns(limit = 10) {
+  async getWorkflowRuns(limit = 10, branch) {
     try {
-      logger.info('Fetching GitHub Actions workflow runs', { limit });
+      logger.info('Fetching GitHub Actions workflow runs', { limit, branch });
 
       if (!this.githubToken) {
         throw new Error('GitHub token not configured. Set GITHUB_TOKEN in .env');
       }
 
+      const params = {
+        per_page: limit,
+        page: 1,
+      };
+
+      if (branch) {
+        params.branch = branch;
+      }
+
       const response = await this.apiClient.get(
         `/repos/${this.repoOwner}/${this.repoName}/actions/workflows/${this.workflowFileName}/runs`,
         {
-          params: {
-            per_page: limit,
-            page: 1,
-          },
+          params,
         }
       );
 

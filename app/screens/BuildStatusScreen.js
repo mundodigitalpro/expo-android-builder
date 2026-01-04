@@ -49,6 +49,7 @@ export default function BuildStatusScreen({ route }) {
   const [buildUrl, setBuildUrl] = useState(null);
   const [buildStartTime, setBuildStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [githubTracking, setGithubTracking] = useState(null);
   const timerRef = useRef(null);
   const progressAnim = useRef(new Animated.Value(0)).current;
 
@@ -97,6 +98,30 @@ export default function BuildStatusScreen({ route }) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const getGithubProgressMessage = (run) => {
+    if (!run) return '⏳ Esperando GitHub Actions...';
+
+    if (run.status === 'queued') {
+      return `⏳ GitHub Actions en cola (#${run.runNumber})`;
+    }
+
+    if (run.status === 'in_progress') {
+      return `🚀 GitHub Actions ejecutando (#${run.runNumber})`;
+    }
+
+    if (run.status === 'completed') {
+      if (run.conclusion === 'success') {
+        return `✅ GitHub Actions completado (#${run.runNumber})`;
+      }
+      if (run.conclusion === 'cancelled') {
+        return `⚠️ GitHub Actions cancelado (#${run.runNumber})`;
+      }
+      return `❌ GitHub Actions falló (#${run.runNumber})`;
+    }
+
+    return '⏳ GitHub Actions en progreso...';
+  };
+
   useEffect(() => {
     loadBuilds();
     initializeSocket();
@@ -114,6 +139,52 @@ export default function BuildStatusScreen({ route }) {
       socketService.off('local-build:error');
     };
   }, [buildType]); // Reload builds when build type changes
+
+  useEffect(() => {
+    if (buildType !== 'GITHUB' || !githubTracking?.branchName) return;
+
+    let isActive = true;
+
+    const pollGitHub = async () => {
+      try {
+        const response = await githubActionsApi.getRuns({
+          limit: 5,
+          branch: githubTracking.branchName
+        });
+        const runs = response.data.runs || [];
+        const latest = runs[0];
+
+        if (!isActive) return;
+
+        if (!latest) {
+          setBuildProgress('⏳ Esperando el run de GitHub Actions...');
+          return;
+        }
+
+        setBuildUrl(latest.htmlUrl);
+        setBuildProgress(getGithubProgressMessage(latest));
+
+        if (latest.status === 'completed') {
+          setLoading(false);
+          setBuildStartTime(null);
+          setGithubTracking(null);
+          loadBuilds();
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error('Error polling GitHub Actions run:', error);
+        }
+      }
+    };
+
+    pollGitHub();
+    const interval = setInterval(pollGitHub, 15000);
+
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
+  }, [buildType, githubTracking?.branchName]);
 
   const initializeSocket = async () => {
     try {
@@ -325,7 +396,7 @@ export default function BuildStatusScreen({ route }) {
 
       if (buildType === 'GITHUB') {
         // Load GitHub Actions runs
-        const response = await githubActionsApi.getRuns(10);
+        const response = await githubActionsApi.getRuns({ limit: 10 });
         const runs = response.data.runs || [];
 
         // Transform GitHub Actions runs to match the build card format
@@ -432,8 +503,10 @@ export default function BuildStatusScreen({ route }) {
                   buildTypeGH
                 );
 
-                setLoading(false);
-                setBuildProgress(`✅ Build triggered on GitHub Actions`);
+                const branchName = result.data?.staging?.branchName;
+                setGithubTracking(branchName ? { branchName } : null);
+                setBuildUrl(result.data?.viewUrl || null);
+                setBuildProgress('⏳ GitHub Actions en cola...');
 
                 Alert.alert(
                   '🎉 Build Triggered',
@@ -672,7 +745,9 @@ export default function BuildStatusScreen({ route }) {
             )}
 
             {buildUrl && (
-              <Text style={styles.progressLink}>Tap to view on EAS →</Text>
+              <Text style={styles.progressLink}>
+                {buildType === 'GITHUB' ? 'Tap to view on GitHub →' : 'Tap to view on EAS →'}
+              </Text>
             )}
           </Pressable>
         )}
