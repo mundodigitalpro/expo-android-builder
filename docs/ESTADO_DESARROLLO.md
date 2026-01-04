@@ -1,6 +1,6 @@
 # Estado del Desarrollo - Expo Android Builder
-**Fecha:** 2 de Enero 2026
-**Última actualización:** 11:30
+**Fecha:** 3 de Enero 2026
+**Última actualización:** 12:15
 **Desarrollador:** josejordandev
 **Entorno:** Termux/Android + VPS Hetzner (Producción)
 
@@ -59,6 +59,22 @@ Claude Code              Versiones           Builds Android
 - **Build ID:** 0e10e12e-be82-4d6a-b110-91f052c7c103
 - **APK:** https://expo.dev/artifacts/eas/2JK1gYZWdHbohaDMi9UxcH.apk
 - **Fecha:** 30 Dic 2024, 09:56 CET
+
+---
+
+## ✅ HITO NUEVO (Fase 3.1) - GitHub Actions Staging
+
+**Estado:** ✅ Staging y builds en GitHub Actions operativos desde la app
+
+- **Staging de proyectos externos** con branches temporales.
+- **Workflow** actualizado para compilar `temp-builds/<project>`.
+- **Tracking en la app** con polling por branch.
+- **Descarga directa de artifacts** via API (`/api/github-actions/runs/:runId/artifacts/latest/download`).
+- **Rate limiting** para staging (5 requests / 15 min).
+
+**Notas de entorno:**
+- En Termux es necesario instalar `rsync` para staging.
+- Los APKs pueden requerir deps nativas (`react-native-gesture-handler`, `@react-native-async-storage/async-storage`).
 
 ---
 
