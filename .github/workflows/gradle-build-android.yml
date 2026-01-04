@@ -65,6 +65,17 @@ jobs:
         working-directory: ${{ github.event.inputs.project_path }}
         run: npx expo prebuild --platform android --clean
 
+      - name: 📋 Ensure metro.config.js exists
+        working-directory: ${{ github.event.inputs.project_path }}
+        run: |
+          if [ ! -f "metro.config.js" ]; then
+            echo "Creating metro.config.js (Expo format)..."
+            cat > metro.config.js << 'METRO_EOF'
+          const { getDefaultConfig } = require('expo/metro-config');
+          module.exports = getDefaultConfig(__dirname);
+          METRO_EOF
+          fi
+
       - name: 📝 Make gradlew executable
         working-directory: ${{ github.event.inputs.project_path }}/android
         run: chmod +x gradlew
