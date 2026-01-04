@@ -73,7 +73,7 @@ jobs:
         working-directory: ${{ github.event.inputs.project_path }}
         run: |
           # Instalar CLI requerido para bundling
-          npm install --save-dev @react-native-community/cli @react-native-community/cli-platform-android
+          npm install --save-dev @react-native-community/cli @react-native-community/cli-platform-android @react-native/metro-config
           
           # Crear directorio de assets
           mkdir -p android/app/src/main/assets
