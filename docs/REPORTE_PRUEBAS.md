@@ -12,6 +12,32 @@ Se ha probado completamente el sistema Expo App Builder y **todas las funcionali
 
 ---
 
+## Actualizacion - 03 de Enero, 2026
+
+**Estado**: ✅ GitHub Actions staging operativo (build disparado y completado)
+
+### Cambios verificados
+- ✅ Staging de proyectos de usuario en `temp-builds/` con branch temporal.
+- ✅ Push y dispatch de workflow en GitHub Actions desde la app.
+- ✅ Seguimiento del build en la app con polling por branch.
+
+### Requisitos detectados en Termux
+- `rsync` es obligatorio para el staging. Instalar con:
+```bash
+pkg update
+pkg install rsync
+```
+
+### Notas de runtime (APK)
+- El build requiere dependencias nativas si se usan en el proyecto:
+  - `react-native-gesture-handler`
+  - `@react-native-async-storage/async-storage`
+
+### Pendiente por validar
+- Descarga directa de artifacts desde la app (endpoint `/api/github-actions/runs/:runId/artifacts/latest/download`).
+
+---
+
 ## Pruebas Realizadas
 
 ### ✅ Test 1: Inicio del Servidor
