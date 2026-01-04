@@ -262,6 +262,16 @@ APK/AAB descargable
 
 ## Changelog
 
+### 4 Enero 2026 - 19:00
+- 🚀 **HITO:** GitHub Actions Staging System (100% Funcional)
+  - Capacidad de compilar proyectos de usuarios (e.g. `test-vps`) usando GitHub Actions.
+  - Trigger desde App Móvil → VPS → GitHub → APK.
+  
+- 🐛 **Critical Fixes:**
+  - **Workflow**: Optimizado `gradle-build-android.yml` para gestión de dependencias (eliminado conflicto `metro-config`).
+  - **Conectividad**: Habilitado `usesCleartextTraffic` en App para permitir conexiones HTTP directas a IP (bypass DNS).
+  - **Docker**: Solucionados permisos de Git y montaje de volúmenes en producción.
+
 ### 4 Enero 2026 - 14:00
 - 🚀 **HITO:** App Principal Compilada en GitHub Actions
   - Primera compilación exitosa de `/app` en GitHub Actions
@@ -273,11 +283,6 @@ APK/AAB descargable
   - Configuración de variables: `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`
   - Instalación de `rsync` para copiar proyectos al staging
   - Configuración de `git config --global --add safe.directory /repo`
-  
-- 🐛 **Fixes Aplicados:**
-  - Dockerfile: agregado `rsync` para staging permanente
-  - Workflow: creación automática de `metro.config.js` (formato Expo)
-  - Workflow: instalación de `@react-native-community/cli` para bundling
 
 ### 2 Enero 2026 - 16:50
 - 🚀 **HITO MAYOR:** Sistema de Build Local en VPS Completado
