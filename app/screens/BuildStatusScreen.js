@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import socketService from '../services/socket';
 import { buildsApi, localBuildsApi, githubActionsApi } from '../services/api';
+import { storage } from '../utils/storage';
 
 // Build type configuration
 const BUILD_TYPES = {
@@ -396,6 +397,10 @@ export default function BuildStatusScreen({ route }) {
 
       if (buildType === 'GITHUB') {
         // Load GitHub Actions runs
+        const [serverUrl, authToken] = await Promise.all([
+          storage.getServerUrl(),
+          storage.getAuthToken()
+        ]);
         const response = await githubActionsApi.getRuns({ limit: 10 });
         const runs = response.data.runs || [];
 
@@ -409,7 +414,11 @@ export default function BuildStatusScreen({ route }) {
           buildProfile: `GitHub Actions (#${run.runNumber})`,
           createdAt: run.createdAt,
           logsUrl: run.htmlUrl,
-          artifacts: run.conclusion === 'success' ? { buildUrl: run.htmlUrl } : null,
+          artifacts: run.conclusion === 'success' && authToken
+            ? {
+              buildUrl: `${serverUrl}/api/github-actions/runs/${run.id}/artifacts/latest/download?token=${encodeURIComponent(authToken)}`
+            }
+            : null,
         }));
 
         setBuilds(transformedRuns);

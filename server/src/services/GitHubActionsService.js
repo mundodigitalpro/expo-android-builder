@@ -277,6 +277,36 @@ class GitHubActionsService {
       );
     }
   }
+
+  /**
+   * Download an artifact ZIP as a stream
+   * @param {number} artifactId - Artifact ID
+   * @returns {Promise<object>} Axios response with stream data
+   */
+  async downloadArtifact(artifactId) {
+    try {
+      if (!this.githubToken) {
+        throw new Error('GitHub token not configured. Set GITHUB_TOKEN in .env');
+      }
+
+      const response = await this.apiClient.get(
+        `/repos/${this.repoOwner}/${this.repoName}/actions/artifacts/${artifactId}/zip`,
+        { responseType: 'stream' }
+      );
+
+      return response;
+    } catch (error) {
+      logger.error('Failed to download GitHub artifact', {
+        artifactId,
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error(
+        error.response?.data?.message ||
+        'Failed to download GitHub artifact'
+      );
+    }
+  }
 }
 
 module.exports = new GitHubActionsService();

@@ -344,6 +344,45 @@ router.get('/runs/:runId/artifacts', async (req, res, next) => {
 });
 
 /**
+ * GET /api/github-actions/runs/:runId/artifacts/latest/download
+ * Download the latest artifact ZIP for a workflow run
+ */
+router.get('/runs/:runId/artifacts/latest/download', async (req, res, next) => {
+  try {
+    const { runId } = req.params;
+
+    if (!githubActionsService.isConfigured()) {
+      return res.status(503).json({
+        error: 'GitHub Actions not configured. GITHUB_TOKEN missing in server configuration.'
+      });
+    }
+
+    const artifacts = await githubActionsService.getArtifacts(runId);
+    if (!artifacts.length) {
+      return res.status(404).json({
+        error: 'No artifacts found for this run'
+      });
+    }
+
+    const latest = artifacts
+      .slice()
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+
+    const downloadResponse = await githubActionsService.downloadArtifact(latest.id);
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${latest.name || 'artifact'}.zip"`
+    );
+
+    downloadResponse.data.pipe(res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/github-actions/status
  * Check if GitHub Actions is configured and available
  */
