@@ -1,8 +1,8 @@
 # Guía para Desarrolladores - Expo App Builder
 
 **Proyecto**: Expo App Builder con Integración Claude Code
-**Estado**: Fases 1-3 Completadas ✅ | Fases 4-5 Pendientes
-**Última actualización**: 2 de Enero, 2026
+**Estado**: Fases 1-3 Completadas ✅ + GitHub Actions Staging ✅ | Fases 4-5 Pendientes
+**Última actualización**: 3 de Enero, 2026
 **Desarrollado en**: Termux (Android) con Claude Code
 
 ---
@@ -348,6 +348,40 @@ Todo sin necesidad de una computadora.
 - ✅ Primera app compilada e instalada (test-claude) - 30 Dic 2024
 - ✅ Primer build local exitoso en VPS - 2 Ene 2026
 - ✅ Sistema de despliegue basado en Git implementado
+
+---
+
+### Fase 3.1 - GitHub Actions Staging COMPLETADA ✅
+
+**Objetivo**: Compilar proyectos creados por usuarios fuera del repo usando GitHub Actions.
+
+**Funcionalidades implementadas:**
+
+#### Backend:
+- ✅ `GitStagingService.js` - Staging con branches temporales y rsync.
+- ✅ `GitHubActionsService.js` extendido (dispatch por branch, listar branches).
+- ✅ `routes/githubActions.js` - Endpoints para staging, trigger y cleanup.
+- ✅ Rate limiting para staging (5 requests / 15 min).
+- ✅ Descarga de artifacts via API (stream ZIP).
+
+#### Frontend:
+- ✅ `BuildStatusScreen.js` con selector GitHub Actions.
+- ✅ Tracking por polling de runs filtrados por branch.
+- ✅ Link directo a descarga del artifact desde la app.
+
+#### API Endpoints:
+- `POST /api/github-actions/build-user-project`
+- `POST /api/github-actions/prepare-project`
+- `POST /api/github-actions/trigger-staged`
+- `DELETE /api/github-actions/cleanup/:branchName`
+- `GET /api/github-actions/temp-branches`
+- `GET /api/github-actions/runs`
+- `GET /api/github-actions/runs/:runId/artifacts`
+- `GET /api/github-actions/runs/:runId/artifacts/latest/download`
+
+#### Requisitos de entorno:
+- En Termux se necesita `rsync` para el staging.
+- Token `GITHUB_TOKEN` con scopes `repo` y `workflow`.
 
 ---
 

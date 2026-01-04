@@ -1,8 +1,8 @@
 # Índice de Documentación - Expo App Builder
 
 **Proyecto**: Expo App Builder con Claude Code
-**Fecha**: 2 de Enero, 2026
-**Estado**: Fases 1-3 Completadas | MVP para VPS Privado 🚀
+**Fecha**: 3 de Enero, 2026
+**Estado**: Fases 1-3 Completadas + Staging GitHub Actions ✅
 
 ---
 
@@ -67,7 +67,20 @@ cat docs/GUIA_DESARROLLADOR.md
 cat /data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md
 ```
 
-#### 4. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
+#### 4. **PLAN_GITHUB_ACTIONS_STAGING.md** ⭐ NUEVO
+**Para**: Entender el staging de proyectos y builds en GitHub Actions
+**Contenido**:
+- Staging con branches temporales
+- Flujos de build para proyectos externos al repo
+- Endpoints y validaciones
+
+**Leer primero si**: Quieres mantener o extender el flujo GitHub Actions
+
+```bash
+cat docs/PLAN_GITHUB_ACTIONS_STAGING.md
+```
+
+#### 5. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
 **Para**: Implementar builds de Android en VPS propio (uso privado)
 **Contenido**:
 - Arquitectura simplificada (sin sobreingeniería)
@@ -84,7 +97,7 @@ cat /data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md
 cat docs/PLAN_MVP_VPS.md
 ```
 
-#### 5. **PLAN_MULTIUSUARIO_FUTURO.md** (Para Play Store)
+#### 6. **PLAN_MULTIUSUARIO_FUTURO.md** (Para Play Store)
 **Para**: Plan completo multi-usuario para publicar en Play Store
 **Contenido**:
 - Transformación arquitectónica completa
@@ -105,7 +118,7 @@ cat docs/PLAN_MULTIUSUARIO_FUTURO.md
 
 ### ✅ Testing y Resultados
 
-#### 6. **REPORTE_PRUEBAS.md**
+#### 7. **REPORTE_PRUEBAS.md**
 **Para**: Ver resultados de las pruebas realizadas
 **Contenido**:
 - 9 tests ejecutados (todos exitosos)
@@ -127,7 +140,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 
 ### 📖 READMEs de Código
 
-#### 7. **projects/expo-app-builder/README.md**
+#### 8. **projects/expo-app-builder/README.md**
 **Para**: Documentación de la app React Native
 **Contenido**:
 - Instalación de la app
@@ -140,7 +153,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 cat /data/data/com.termux/files/home/projects/expo-app-builder/README.md
 ```
 
-#### 8. **expo-app-builder-server/README.md**
+#### 9. **expo-app-builder-server/README.md**
 **Para**: Documentación del servidor Node.js
 **Contenido**:
 - Instalación del servidor
@@ -153,7 +166,7 @@ cat /data/data/com.termux/files/home/projects/expo-app-builder/README.md
 
 ### 🌍 Despliegue e Infraestructura
 
-#### 9. **DEPLOYMENT_VPS.md** ⭐ NUEVO
+#### 10. **DEPLOYMENT_VPS.md** ⭐ NUEVO
 **Para**: Configurar y desplegar en VPS (Producción)
 **Contenido**:
 - Guía de instalación de dependencias (Java, Android SDK, NDK)
@@ -226,10 +239,11 @@ cat docs/DEPLOYMENT_VPS.md
 Fase 1: Setup Básico          ████████████████████  100% ✅ COMPLETADA
 Fase 2: Claude Code            ████████████████████  100% ✅ COMPLETADA
 Fase 3: EAS Build & Local VPS  ████████████████████  100% ✅ COMPLETADA
+Fase 3.1: GitHub Actions       ████████████████████  100% ✅ COMPLETADA
 Fase 4: Refinamiento UI/UX     ░░░░░░░░░░░░░░░░░░░░    0% 🔄 SIGUIENTE
 Fase 5: Testing & Optimization ░░░░░░░░░░░░░░░░░░░░    0% ⏳ PENDIENTE
 
-Progreso General: 60% 🎉
+Progreso General: 70% 🎉
 ```
 
 ---
@@ -324,7 +338,7 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 
 ---
 
-**Última actualización**: 2 de Enero, 2026
+**Última actualización**: 3 de Enero, 2026
 **Mantenido por**: Claude Code
 **Versión del índice**: 2.0
 
