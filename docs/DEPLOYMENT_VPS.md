@@ -800,6 +800,57 @@ cp /home/josejordan/apps/builder/server/.env \
    /home/josejordan/apps/builder.env.backup
 ```
 
+---
+
+## ✅ GitHub Actions Staging & Firewall Access - January 4, 2026
+
+### GitHub Actions Staging System
+
+We implemented a **staging system** that allows compiling any user project (even those outside the repo) using GitHub Actions.
+
+**Architecture**:
+1. Server creates a temporary branch `build/<project>-<timestamp>`
+2. Copies project files to `temp-builds/<project>`
+3. Pushes branch to GitHub
+4. Triggers `gradle-build-android.yml` workflow on that branch
+
+**Configuration Requirements (VPS)**:
+For this to work inside Docker, the container **must have access to the git repository**:
+
+1. **Mount git repo**: The entire repo (including `.git`) must be mounted to `/repo` in the container.
+2. **Git Credentials**: `GITHUB_TOKEN` must be available in `.env`.
+3. **Safe Directory**: Git must trust the mounted directory.
+
+**docker-compose.yml update**:
+```yaml
+    volumes:
+      - /home/josejordan/apps/builder:/repo:rw  # Mount full repo
+    working_dir: /repo/server
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GIT_USER_NAME=Expo Builder
+      - GIT_USER_EMAIL=builder@josejordan.dev
+```
+
+### Direct Access / Firewall Configuration
+
+If Cloudflare or Nginx fails to resolve (or for testing), the app can connect directly to the Docker container IP.
+
+**Firewall Update**:
+By default, UFW blocks port 3001. We explicitly allowed it for direct access:
+
+```bash
+sudo ufw allow 3001/tcp
+sudo ufw reload
+```
+
+**Connection Options from App**:
+1. **Domain (Preferred)**: `https://builder.josejordan.dev` (via Cloudflare + Nginx)
+2. **Direct IP (Fallback)**: `http://46.62.214.102:3001` (via UFW Allow)
+
+If the app fails to connect via domain, switch to Direct IP.
+```
+
 2. **Stop Running Services**:
 ```bash
 cd /home/josejordan/apps/builder/server
