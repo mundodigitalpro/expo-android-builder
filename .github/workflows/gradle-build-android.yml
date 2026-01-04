@@ -83,13 +83,10 @@ jobs:
       - name: 📦 Bundle JavaScript (para APK standalone)
         working-directory: ${{ github.event.inputs.project_path }}
         run: |
-          # Instalar CLI requerido para bundling
-          npm install --save-dev @react-native-community/cli @react-native-community/cli-platform-android @react-native/metro-config
-          
           # Crear directorio de assets
           mkdir -p android/app/src/main/assets
           
-          # Generar bundle usando el CLI instalado
+          # Generar bundle usando el CLI del proyecto
           npx react-native bundle \
             --platform android \
             --dev false \
