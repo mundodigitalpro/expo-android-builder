@@ -69,6 +69,17 @@ jobs:
         working-directory: ${{ github.event.inputs.project_path }}/android
         run: chmod +x gradlew
 
+      - name: 📦 Bundle JavaScript (para APK standalone)
+        working-directory: ${{ github.event.inputs.project_path }}
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
       - name: 🔑 Setup signing keys (solo para release)
         if: ${{ github.event.inputs.build_type == 'release' }}
         working-directory: ${{ github.event.inputs.project_path }}/android
