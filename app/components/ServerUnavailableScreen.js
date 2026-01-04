@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
+  ScrollView,
   StyleSheet,
   Pressable,
   Linking,
@@ -10,10 +12,24 @@ import {
 } from 'react-native';
 import LoadingSpinner from './LoadingSpinner';
 
-export default function ServerUnavailableScreen({ onRetry }) {
+export default function ServerUnavailableScreen({
+  onRetry,
+  serverUrl,
+  lastError,
+  onUpdateServerUrl,
+}) {
   const [isRetrying, setIsRetrying] = useState(false);
+  const [customUrl, setCustomUrl] = useState(serverUrl || '');
 
   const STARTUP_COMMAND = 'cd /data/data/com.termux/files/home/expo-app-builder-workspace/server && ./start-all-services.sh';
+  const DEFAULT_URLS = {
+    production: 'https://builder.josejordan.dev',
+    local: 'http://localhost:3001',
+  };
+
+  useEffect(() => {
+    setCustomUrl(serverUrl || '');
+  }, [serverUrl]);
 
   const handleCopyCommand = () => {
     Clipboard.setString(STARTUP_COMMAND);
@@ -46,12 +62,50 @@ export default function ServerUnavailableScreen({ onRetry }) {
     setIsRetrying(false);
   };
 
+  const handleApplyUrl = async (nextUrl) => {
+    const trimmedUrl = (nextUrl || '').trim();
+    if (!trimmedUrl) {
+      Alert.alert('Error', 'Ingresa una URL valida');
+      return;
+    }
+    if (onUpdateServerUrl) {
+      await onUpdateServerUrl(trimmedUrl);
+    }
+    setCustomUrl(trimmedUrl);
+  };
+
+  const handleApplyAndRetry = async () => {
+    await handleApplyUrl(customUrl);
+    await handleRetry();
+  };
+
+  const handleUsePreset = async (presetUrl) => {
+    await handleApplyUrl(presetUrl);
+    await handleRetry();
+  };
+
+  const handleCopyDiagnostics = () => {
+    const lines = [
+      `URL: ${serverUrl || '-'}`,
+      lastError?.status ? `HTTP: ${lastError.status}` : null,
+      lastError?.code ? `Code: ${lastError.code}` : null,
+      lastError?.message ? `Message: ${lastError.message}` : null,
+      lastError?.detail ? `Detail: ${lastError.detail}` : null,
+      lastError?.time ? `Time: ${lastError.time}` : null,
+    ].filter(Boolean);
+    Clipboard.setString(lines.join('\n'));
+    Alert.alert('Diagnostico Copiado', 'Se copio el diagnostico al portapapeles.');
+  };
+
   if (isRetrying) {
     return <LoadingSpinner message="Verificando conexión..." />;
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.content}>
         {/* Icono de Error */}
         <View style={styles.iconContainer}>
@@ -88,6 +142,84 @@ export default function ServerUnavailableScreen({ onRetry }) {
           </Text>
         </View>
 
+        {/* Ajustes Rapidos */}
+        <View style={styles.quickSettingsContainer}>
+          <Text style={styles.instructionsTitle}>Ajustes Rapidos</Text>
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => handleUsePreset(DEFAULT_URLS.production)}
+          >
+            <Text style={styles.secondaryButtonText}>
+              🌐 Usar VPS (HTTPS)
+            </Text>
+          </Pressable>
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => handleUsePreset(DEFAULT_URLS.local)}
+          >
+            <Text style={styles.secondaryButtonText}>
+              📱 Usar Local (Termux)
+            </Text>
+          </Pressable>
+
+          <Text style={styles.label}>URL Personalizada</Text>
+          <TextInput
+            style={styles.input}
+            value={customUrl}
+            onChangeText={setCustomUrl}
+            placeholder="https://tu-servidor.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={handleApplyAndRetry}
+          >
+            <Text style={styles.secondaryButtonText}>
+              💾 Guardar URL y Reintentar
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Diagnostico */}
+        <View style={styles.diagnosticsContainer}>
+          <Text style={styles.instructionsTitle}>Diagnostico</Text>
+          <Text style={styles.diagnosticLine}>
+            URL actual: {serverUrl || '-'}
+          </Text>
+          {lastError ? (
+            <>
+              <Text style={styles.diagnosticLine}>
+                Mensaje: {lastError.message}
+              </Text>
+              {!!lastError.status && (
+                <Text style={styles.diagnosticLine}>
+                  HTTP: {lastError.status}
+                </Text>
+              )}
+              {!!lastError.code && (
+                <Text style={styles.diagnosticLine}>
+                  Code: {lastError.code}
+                </Text>
+              )}
+              {!!lastError.detail && (
+                <Text style={styles.diagnosticLine}>
+                  Detail: {lastError.detail}
+                </Text>
+              )}
+              {!!lastError.time && (
+                <Text style={styles.diagnosticLine}>
+                  Time: {lastError.time}
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text style={styles.diagnosticLine}>
+              Sin error registrado
+            </Text>
+          )}
+        </View>
+
         {/* Botones de Acción */}
         <View style={styles.actionsContainer}>
           <Pressable
@@ -116,6 +248,15 @@ export default function ServerUnavailableScreen({ onRetry }) {
               🔄 Reintentar Conexión
             </Text>
           </Pressable>
+
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={handleCopyDiagnostics}
+          >
+            <Text style={styles.secondaryButtonText}>
+              🧾 Copiar Diagnostico
+            </Text>
+          </Pressable>
         </View>
 
         {/* Ayuda adicional */}
@@ -123,7 +264,7 @@ export default function ServerUnavailableScreen({ onRetry }) {
           💡 Tip: Guarda el comando en un script para acceso rápido
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -131,8 +272,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 24,
   },
   content: {
     width: '90%',
@@ -173,6 +314,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
   },
+  quickSettingsContainer: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
   instructionsTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -195,6 +343,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#fff',
     fontFamily: 'monospace',
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    backgroundColor: '#fff',
+  },
+  diagnosticsContainer: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  diagnosticLine: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 6,
   },
   actionsContainer: {
     gap: 12,

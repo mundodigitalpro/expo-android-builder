@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Función para obtener la URL base dinámicamente
 const getBaseURL = async () => {
-  const serverUrl = await AsyncStorage.getItem('server_url') || 'http://46.62.214.102:3001';
+  const serverUrl = await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
   return `${serverUrl}/api`;
 };
 
@@ -103,9 +103,9 @@ export const githubActionsApi = {
     api.delete(`/github-actions/cleanup/${branchName}`, { params: { projectName } }),
 };
 
-export const healthCheck = async () => {
-  const serverUrl = await AsyncStorage.getItem('server_url') || 'http://46.62.214.102:3001';
-  return axios.get(`${serverUrl}/health`);
+export const healthCheck = async (overrideUrl) => {
+  const serverUrl = overrideUrl || await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
+  return axios.get(`${serverUrl}/health`, { timeout: 8000 });
 };
 
 export default api;

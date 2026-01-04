@@ -1,6 +1,6 @@
 # Estado del Desarrollo - Expo Android Builder
-**Fecha:** 3 de Enero 2026
-**Última actualización:** 12:15
+**Fecha:** 4 de Enero 2026
+**Última actualización:** 19:10
 **Desarrollador:** josejordandev
 **Entorno:** Termux/Android + VPS Hetzner (Producción)
 
@@ -75,6 +75,16 @@ Claude Code              Versiones           Builds Android
 **Notas de entorno:**
 - En Termux es necesario instalar `rsync` para staging.
 - Los APKs pueden requerir deps nativas (`react-native-gesture-handler`, `@react-native-async-storage/async-storage`).
+
+---
+
+## ✅ Actualizacion - Diagnostico de Inicio y Fallback de URL (4 Ene 2026)
+
+**Estado:** ✅ Instrumentacion agregada para debug de conectividad en app
+
+- Indicadores de arranque con mensaje y URL de health check.
+- Pantalla de "Servidor No Disponible" con presets (VPS/Local), URL manual y copia de diagnostico.
+- Fallback automatico de URL legacy (IP) a HTTPS y timeout de health check.
 
 ---
 

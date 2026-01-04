@@ -20,13 +20,38 @@ const Stack = createStackNavigator();
 export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [serverAvailable, setServerAvailable] = useState(null); // null = checking
+  const [startupMessage, setStartupMessage] = useState('Inicializando...');
+  const [startupDetails, setStartupDetails] = useState('');
+  const [currentServerUrl, setCurrentServerUrl] = useState(null);
+  const [lastHealthError, setLastHealthError] = useState(null);
 
   useEffect(() => {
     initializeApp();
   }, []);
 
+  const buildHealthError = (error, url) => {
+    const status = error?.response?.status || null;
+    const code = error?.code || null;
+    const data = error?.response?.data;
+    let detail = '';
+    if (data) {
+      detail = typeof data === 'string' ? data : JSON.stringify(data);
+    }
+    return {
+      url,
+      message: error?.message || 'Error desconocido',
+      status,
+      code,
+      detail,
+      time: new Date().toISOString(),
+    };
+  };
+
   const initializeApp = async () => {
     try {
+      setStartupMessage('Cargando configuracion...');
+      setStartupDetails('');
+      setLastHealthError(null);
       // 1. Configuración inicial - Forzar actualización de token
       const currentToken = await storage.getAuthToken();
       const correctToken = 'expo-builder-vps-2024-secure-token-MTc2NzIwNjIwMwo=';
@@ -40,46 +65,103 @@ export default function App() {
       if (!serverUrl) {
         await storage.setServerUrl('https://builder.josejordan.dev');
       }
+      const resolvedServerUrl = serverUrl || 'https://builder.josejordan.dev';
+      setCurrentServerUrl(resolvedServerUrl);
+      setStartupDetails(`URL: ${resolvedServerUrl}`);
 
       // 2. Verificar disponibilidad del servidor
-      await checkServerAvailability();
+      setStartupMessage('Verificando servidor...');
+      await checkServerAvailability(resolvedServerUrl);
 
       setIsReady(true);
     } catch (error) {
       console.error('Error initializing app:', error);
+      setStartupMessage('Error al inicializar');
+      setStartupDetails(error?.message || 'Error desconocido');
+      setLastHealthError(buildHealthError(error, currentServerUrl || ''));
+      setServerAvailable(false);
       Alert.alert('Error', 'No se pudo inicializar la aplicación');
       setIsReady(true); // Permitir que la app se muestre incluso si hay error
     }
   };
 
-  const checkServerAvailability = async (retries = 3) => {
+  const checkServerAvailability = async (serverUrl, retries = 3) => {
+    if (!serverUrl) {
+      setServerAvailable(false);
+      return;
+    }
+    setServerAvailable(null);
+    setCurrentServerUrl(serverUrl);
     for (let i = 0; i < retries; i++) {
       try {
-        await healthCheck();
+        setStartupMessage(`Verificando servidor (${i + 1}/${retries})...`);
+        setStartupDetails(`URL: ${serverUrl}`);
+        await healthCheck(serverUrl);
         setServerAvailable(true);
+        setLastHealthError(null);
         console.log('✅ Server is available');
         return;
       } catch (error) {
+        setLastHealthError(buildHealthError(error, serverUrl));
         if (i < retries - 1) {
           console.log(`❌ Retry ${i + 1}/${retries - 1}...`);
           await new Promise(resolve => setTimeout(resolve, 2000)); // 2 segundos entre intentos
         }
       }
     }
+    if (serverUrl === 'http://46.62.214.102:3001') {
+      try {
+        const httpsUrl = 'https://builder.josejordan.dev';
+        setStartupMessage('Intentando servidor HTTPS...');
+        setStartupDetails(`URL: ${httpsUrl}`);
+        await healthCheck(httpsUrl);
+        await storage.setServerUrl(httpsUrl);
+        setCurrentServerUrl(httpsUrl);
+        setLastHealthError(null);
+        setServerAvailable(true);
+        console.log('✅ Server is available (migrated to HTTPS)');
+        return;
+      } catch (error) {
+        setLastHealthError(buildHealthError(error, 'https://builder.josejordan.dev'));
+      }
+    }
     setServerAvailable(false);
     console.log('❌ Server is not available after retries');
   };
 
+  const handleRetry = async () => {
+    const serverUrl = await storage.getServerUrl();
+    const resolvedServerUrl = serverUrl || 'https://builder.josejordan.dev';
+    setCurrentServerUrl(resolvedServerUrl);
+    await checkServerAvailability(resolvedServerUrl);
+  };
+
+  const handleUpdateServerUrl = async (nextUrl) => {
+    const trimmedUrl = (nextUrl || '').trim();
+    if (!trimmedUrl) {
+      return;
+    }
+    await storage.setServerUrl(trimmedUrl);
+    setCurrentServerUrl(trimmedUrl);
+  };
+
   if (!isReady) {
-    return <LoadingSpinner message="Inicializando..." />;
+    return <LoadingSpinner message={startupMessage} details={startupDetails} />;
   }
 
   if (serverAvailable === false) {
-    return <ServerUnavailableScreen onRetry={checkServerAvailability} />;
+    return (
+      <ServerUnavailableScreen
+        onRetry={handleRetry}
+        serverUrl={currentServerUrl}
+        lastError={lastHealthError}
+        onUpdateServerUrl={handleUpdateServerUrl}
+      />
+    );
   }
 
   if (serverAvailable === null) {
-    return <LoadingSpinner message="Verificando servidor..." />;
+    return <LoadingSpinner message={startupMessage} details={startupDetails} />;
   }
 
   return (

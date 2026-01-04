@@ -38,6 +38,22 @@ pkg install rsync
 
 ---
 
+## Actualizacion - 04 de Enero, 2026
+
+**Estado**: ⚠️ No probado (cambios de diagnostico en la app)
+
+### Cambios registrados
+- Pantalla de diagnostico en arranque con URL usada y ultimo error.
+- Presets VPS/Local y URL personalizada accesibles sin entrar a Ajustes.
+- Fallback automatico de URL legacy (IP) a HTTPS en health check.
+
+### Pendiente por validar
+- Arranque en VPS con `https://builder.josejordan.dev`.
+- Arranque local con `http://localhost:3001`.
+- Copia de diagnostico y actualizacion de URL desde pantalla offline.
+
+---
+
 ## Pruebas Realizadas
 
 ### ✅ Test 1: Inicio del Servidor
