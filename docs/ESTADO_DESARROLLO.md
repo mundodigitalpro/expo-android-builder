@@ -262,6 +262,23 @@ APK/AAB descargable
 
 ## Changelog
 
+### 4 Enero 2026 - 14:00
+- 🚀 **HITO:** App Principal Compilada en GitHub Actions
+  - Primera compilación exitosa de `/app` en GitHub Actions
+  - APK funcionando y conectándose al VPS de producción
+  - Script `build-android.sh` para automatizar builds desde terminal
+
+- 🔧 **GitHub Actions Staging Configurado en VPS Docker**
+  - Montaje del repositorio git en contenedor Docker (`/repo:rw`)
+  - Configuración de variables: `GITHUB_TOKEN`, `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`
+  - Instalación de `rsync` para copiar proyectos al staging
+  - Configuración de `git config --global --add safe.directory /repo`
+  
+- 🐛 **Fixes Aplicados:**
+  - Dockerfile: agregado `rsync` para staging permanente
+  - Workflow: creación automática de `metro.config.js` (formato Expo)
+  - Workflow: instalación de `@react-native-community/cli` para bundling
+
 ### 2 Enero 2026 - 16:50
 - 🚀 **HITO MAYOR:** Sistema de Build Local en VPS Completado
   - Implementado `LocalBuildService` para compilar APKs nativamente en el VPS
