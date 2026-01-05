@@ -36,16 +36,15 @@ COPY . .
 # Crear directorio para proyectos
 RUN mkdir -p /app-builder-projects
 
-# Crear usuario no-root (usar GID/UID 1001 para evitar conflictos)
-RUN groupadd -r builder -g 1001 && \
-    useradd -r -u 1001 -g builder -m -d /home/builder -s /bin/bash builder
+# Crear usuario no-root (usar UID 1000 con grupo node existente)
+RUN useradd -r -u 1000 -g node -m -d /home/builder -s /bin/bash builder
 
 # Crear directorio para Claude config
 RUN mkdir -p /home/builder/.claude && \
-    chown -R builder:builder /home/builder/.claude
+    chown -R builder:node /home/builder/.claude
 
 # Cambiar permisos de directorios
-RUN chown -R builder:builder /app /app-builder-projects
+RUN chown -R builder:node /app /app-builder-projects
 
 # Exponer puerto
 EXPOSE 3001
