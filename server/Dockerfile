@@ -27,6 +27,9 @@ RUN npm install --production
 # Instalar CLIs globales (Expo y EAS)
 RUN npm install -g expo-cli eas-cli
 
+# Instalar Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
 # Copiar código fuente
 COPY . .
 
@@ -35,6 +38,10 @@ RUN mkdir -p /app-builder-projects
 
 # Exponer puerto
 EXPOSE 3001
+
+# Configurar Claude Code
+ENV CLAUDE_CONFIG_DIR=/root/.claude
+ENV CLAUDE_NO_TELEMETRY=1
 
 # Variables de entorno por defecto (pueden ser sobrescritas por docker-compose)
 ENV NODE_ENV=production

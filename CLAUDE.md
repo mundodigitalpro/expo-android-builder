@@ -214,6 +214,32 @@ NODE_ENV=development
 
 These are initialized in `App.js` on first launch.
 
+### Claude Code CLI Integration
+
+**Installation**: Claude CLI is installed globally in the Docker container via `@anthropic-ai/claude-code` npm package.
+
+**Authentication**:
+- Claude credentials are mounted read-only from the VPS host: `/home/josejordan/.claude:/root/.claude:ro`
+- The container uses the same authenticated session as the VPS user
+- No additional login required
+
+**Environment Variables**:
+- `CLAUDE_CONFIG_DIR=/root/.claude`: Configuration directory inside container
+- `CLAUDE_NO_TELEMETRY=1`: Disable telemetry in production
+
+**Verification**:
+```bash
+# Inside container
+docker compose exec expo-builder claude --version
+# Should output: Claude Code CLI version
+
+# Test from API
+curl -X POST https://builder.josejordan.dev/api/claude/execute \
+  -H "Authorization: Bearer expo-builder-vps-2024-secure-token-MTc2NzIwNjIwMwo=" \
+  -H "Content-Type: application/json" \
+  -d '{"projectPath":"/app-builder-projects/test-app","prompt":"What files are in this project?","socketId":"test-socket"}'
+```
+
 ### Project Naming Rules
 
 Enforced in both frontend (`utils/validators.js`) and backend (`utils/validator.js`):
