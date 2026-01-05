@@ -4,8 +4,9 @@ const logger = require('../utils/logger');
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const isDownloadRequest = req.method === 'GET'
-    && req.path.includes('/github-actions/runs/')
-    && req.path.endsWith('/download');
+    && req.originalUrl.includes('/api/github-actions/runs/')
+    && req.originalUrl.includes('/artifacts/')
+    && req.originalUrl.includes('/download');
 
   if (!authHeader) {
     if (isDownloadRequest && req.query?.token) {
