@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-WORKSPACE_DIR="/data/data/com.termux/files/home/expo-app-builder-workspace"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVER_DIR="$WORKSPACE_DIR/server"
 
 echo "🛑 Deteniendo servicios..."

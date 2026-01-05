@@ -1,8 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-echo "🚀 Starting Expo App Builder Server..."
+echo "🚀 Starting Expo Android Builder Server..."
 
-cd /data/data/com.termux/files/home/expo-app-builder-server
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SERVER_DIR="$(cd "$SCRIPT_DIR" && pwd)"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+cd "$SERVER_DIR"
 
 if [ ! -d "node_modules" ]; then
   echo "📦 Installing dependencies..."

@@ -3,11 +3,12 @@
 # Script maestro para iniciar backend + frontend
 # Uso: ./start-all-services.sh
 
-WORKSPACE_DIR="/data/data/com.termux/files/home/expo-app-builder-workspace"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SERVER_DIR="$WORKSPACE_DIR/server"
 APP_DIR="$WORKSPACE_DIR/app"
 
-echo "🚀 Iniciando Expo App Builder Services..."
+echo "🚀 Iniciando Expo Android Builder Services..."
 
 # 1. Iniciar Backend
 echo ""
