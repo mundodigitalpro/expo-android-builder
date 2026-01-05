@@ -19,13 +19,13 @@ services:
       - GITHUB_REPO_NAME=${GITHUB_REPO_NAME}
       - GIT_USER_NAME=Expo Builder
       - GIT_USER_EMAIL=builder@josejordan.dev
-      - CLAUDE_CONFIG_DIR=/root/.claude
+      - CLAUDE_CONFIG_DIR=/home/builder/.claude
       - CLAUDE_NO_TELEMETRY=1
     volumes:
       - app-builder-projects:/app-builder-projects
       - /opt/android-sdk:/opt/android-sdk:rw
       - /home/josejordan/apps/builder:/repo:rw
-      - /home/josejordan/.claude:/root/.claude:ro
+      - /home/josejordan/.claude:/home/builder/.claude:rw
     working_dir: /repo/server
     networks:
       - builder-network
