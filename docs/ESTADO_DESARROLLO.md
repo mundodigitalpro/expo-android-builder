@@ -88,6 +88,16 @@ Claude Code              Versiones           Builds Android
 
 ---
 
+## ✅ Actualizacion - Limpieza de branches y script de build (4 Ene 2026)
+
+**Estado:** ✅ Cleanup automatico de branches de GitHub al eliminar proyectos
+
+- Al eliminar un proyecto se intentan borrar sus branches `build/<projectName>-*` en GitHub (no bloquea el borrado local si falla).
+- Listado de branches en GitHub con paginacion para evitar limites de 100.
+- Script `build-android.sh` agregado para disparar el workflow `gradle-build-android.yml` via GitHub CLI.
+
+---
+
 ## Resumen del Proyecto
 
 **Expo App Builder Workspace** es un sistema móvil de desarrollo que corre en Termux/Android, compuesto por:
