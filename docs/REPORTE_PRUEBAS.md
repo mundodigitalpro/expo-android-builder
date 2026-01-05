@@ -61,7 +61,7 @@ pkg install rsync
 
 **Comando**:
 ```bash
-cd /data/data/com.termux/files/home/expo-app-builder-server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 node server.js &
 ```
 
@@ -392,11 +392,11 @@ Si quieres probar el sistema manualmente, estos son los comandos:
 ### Iniciar Sistema
 ```bash
 # Terminal 1: Servidor
-cd /data/data/com.termux/files/home/expo-app-builder-server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 npm start
 
 # Terminal 2: App
-cd /data/data/com.termux/files/home/projects/expo-app-builder
+cd /data/data/com.termux/files/home/expo-android-builder/app
 npm start
 ```
 

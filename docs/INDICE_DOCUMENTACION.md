@@ -140,7 +140,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 
 ### 📖 READMEs de Código
 
-#### 8. **projects/expo-app-builder/README.md**
+#### 8. **app/README.md**
 **Para**: Documentación de la app React Native
 **Contenido**:
 - Instalación de la app
@@ -150,10 +150,10 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 - Próximas funcionalidades
 
 ```bash
-cat /data/data/com.termux/files/home/projects/expo-app-builder/README.md
+cat /data/data/com.termux/files/home/expo-android-builder/app/README.md
 ```
 
-#### 9. **expo-app-builder-server/README.md**
+#### 9. **server/README.md**
 **Para**: Documentación del servidor Node.js
 **Contenido**:
 - Instalación del servidor
@@ -194,12 +194,12 @@ cat docs/DEPLOYMENT_VPS.md
 ├── 📋 EXPO_APP_BUILDER_PLAN.md      ← Plan completo
 ├── ✅ REPORTE_PRUEBAS.md            ← Resultados de tests
 │
-├── expo-app-builder-server/
+├── server/
 │   ├── README.md                     ← Docs del servidor
 │   ├── server.js                     ← Código del servidor
 │   └── ...
 │
-└── projects/expo-app-builder/
+└── app/
     ├── README.md                     ← Docs de la app
     ├── App.js                        ← Código de la app
     └── ...
@@ -219,10 +219,10 @@ cat docs/DEPLOYMENT_VPS.md
 3. **REPORTE_PRUEBAS.md**
 
 ### Quiero entender cómo funciona el servidor
-→ Lee: **expo-app-builder-server/README.md**
+→ Lee: **server/README.md**
 
 ### Quiero entender cómo funciona la app
-→ Lee: **projects/expo-app-builder/README.md**
+→ Lee: **app/README.md**
 
 ### Quiero ver si todo está funcionando
 → Lee: **REPORTE_PRUEBAS.md**
@@ -287,8 +287,8 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 **Ubicación del proyecto**:
 ```
 /data/data/com.termux/files/home/
-├── expo-app-builder-server/  (Backend)
-└── projects/expo-app-builder/ (Frontend)
+├── server/  (Backend)
+└── app/ (Frontend)
 ```
 
 **Servidor**: http://localhost:3001

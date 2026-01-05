@@ -30,7 +30,7 @@ Crear una aplicación Android (React Native + Expo) que permita crear apps Expo 
 ## Componentes Principales
 
 ### 1. React Native App (Frontend)
-**Ubicación:** `/data/data/com.termux/files/home/projects/expo-app-builder/`
+**Ubicación:** `/data/data/com.termux/files/home/expo-android-builder/app/`
 
 **Pantallas:**
 - **HomeScreen**: Lista de proyectos creados con opciones CRUD
@@ -54,7 +54,7 @@ Crear una aplicación Android (React Native + Expo) que permita crear apps Expo 
 ```
 
 ### 2. Node.js Server (Backend en Termux)
-**Ubicación:** `/data/data/com.termux/files/home/expo-app-builder-server/`
+**Ubicación:** `/data/data/com.termux/files/home/expo-android-builder/server/`
 
 **Servicios:**
 - **ProjectService**: Crear/listar/eliminar proyectos Expo
@@ -89,7 +89,7 @@ Crear una aplicación Android (React Native + Expo) que permita crear apps Expo 
 
 ### App (React Native)
 ```
-expo-app-builder/
+app/
 ├── App.js                          # Root component con NavigationContainer
 ├── app.json                        # Configuración Expo
 ├── package.json
@@ -115,7 +115,7 @@ expo-app-builder/
 
 ### Server (Node.js)
 ```
-expo-app-builder-server/
+server/
 ├── package.json
 ├── .env                           # Variables de entorno
 ├── server.js                      # Entry point
@@ -228,11 +228,11 @@ function sanitizePath(userPath) {
 
 ### Fase 1: Setup Básico (Semana 1)
 **Archivos críticos:**
-- `expo-app-builder-server/server.js`
-- `expo-app-builder-server/src/services/ProjectService.js`
-- `expo-app-builder/App.js`
-- `expo-app-builder/screens/HomeScreen.js`
-- `expo-app-builder/services/api.js`
+- `server/server.js`
+- `server/src/services/ProjectService.js`
+- `app/App.js`
+- `app/screens/HomeScreen.js`
+- `app/services/api.js`
 
 **Funcionalidad:**
 - Servidor Express básico corriendo en Termux
@@ -242,10 +242,10 @@ function sanitizePath(userPath) {
 
 ### Fase 2: Integración Claude Code (Semana 2)
 **Archivos críticos:**
-- `expo-app-builder-server/src/services/ClaudeService.js`
-- `expo-app-builder-server/src/utils/executor.js`
-- `expo-app-builder/screens/ClaudeCodeScreen.js`
-- `expo-app-builder/services/socket.js`
+- `server/src/services/ClaudeService.js`
+- `server/src/utils/executor.js`
+- `app/screens/ClaudeCodeScreen.js`
+- `app/services/socket.js`
 
 **Funcionalidad:**
 - WebSocket setup
@@ -255,9 +255,9 @@ function sanitizePath(userPath) {
 
 ### Fase 3: Integración EAS Build (Semana 3)
 **Archivos críticos:**
-- `expo-app-builder-server/src/services/EASService.js`
-- `expo-app-builder/screens/BuildStatusScreen.js`
-- `expo-app-builder/components/BuildLog.js`
+- `server/src/services/EASService.js`
+- `app/screens/BuildStatusScreen.js`
+- `app/components/BuildLog.js`
 
 **Funcionalidad:**
 - Iniciar builds desde app
@@ -266,7 +266,7 @@ function sanitizePath(userPath) {
 
 ### Fase 4: UI/UX Refinamiento (Semana 4)
 **Archivos:**
-- Todos los componentes en `expo-app-builder/components/`
+- Todos los componentes en `app/components/`
 - Estilos mejorados
 - Loading states
 - Error handling
@@ -284,7 +284,7 @@ function sanitizePath(userPath) {
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Navegar al directorio del servidor
-cd /data/data/com.termux/files/home/expo-app-builder-server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 
 # Iniciar servidor
 node server.js &
@@ -326,7 +326,7 @@ npm install -g expo-cli eas-cli
 ## Próximos Pasos al Aprobar
 
 1. Crear estructura de directorios
-2. Inicializar proyecto React Native: `npx create-expo-app expo-app-builder`
+2. Inicializar proyecto React Native: `npx create-expo-app expo-android-builder`
 3. Inicializar servidor Node.js
 4. Implementar Fase 1 (Setup Básico)
 5. Testing de comunicación app-server
@@ -335,17 +335,17 @@ npm install -g expo-cli eas-cli
 ## Archivos Críticos a Crear (Resumen)
 
 ### Alta Prioridad (Fase 1):
-1. `/home/expo-app-builder-server/server.js`
-2. `/home/expo-app-builder-server/src/services/ProjectService.js`
-3. `/home/projects/expo-app-builder/App.js`
-4. `/home/projects/expo-app-builder/screens/HomeScreen.js`
-5. `/home/projects/expo-app-builder/services/api.js`
+1. `/home/expo-android-builder/server/server.js`
+2. `/home/expo-android-builder/server/src/services/ProjectService.js`
+3. `/home/expo-android-builder/app/App.js`
+4. `/home/expo-android-builder/app/screens/HomeScreen.js`
+5. `/home/expo-android-builder/app/services/api.js`
 
 ### Media Prioridad (Fase 2-3):
-6. `/home/expo-app-builder-server/src/services/ClaudeService.js`
-7. `/home/expo-app-builder-server/src/utils/executor.js`
-8. `/home/projects/expo-app-builder/screens/ClaudeCodeScreen.js`
-9. `/home/projects/expo-app-builder/screens/BuildStatusScreen.js`
+6. `/home/expo-android-builder/server/src/services/ClaudeService.js`
+7. `/home/expo-android-builder/server/src/utils/executor.js`
+8. `/home/expo-android-builder/app/screens/ClaudeCodeScreen.js`
+9. `/home/expo-android-builder/app/screens/BuildStatusScreen.js`
 
 ### Baja Prioridad (Fase 4-5):
 10. Componentes de UI refinados

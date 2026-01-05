@@ -20,7 +20,7 @@ Backend Node.js para la aplicación Expo App Builder. Proporciona API REST y Web
 ## Instalación
 
 ```bash
-cd /data/data/com.termux/files/home/expo-app-builder-server
+cd /data/data/com.termux/files/home/expo-android-builder/server
 npm install
 ```
 
@@ -60,7 +60,7 @@ kill $(cat server.pid)
 ## Estructura
 
 ```
-expo-app-builder-server/
+server/
 ├── server.js                # Punto de entrada
 ├── src/
 │   ├── config/

@@ -400,7 +400,7 @@ APK/AAB descargable
 ### 🚀 Inicio Rápido (TODO EN UNO):
 ```bash
 # Iniciar backend + frontend con un solo comando
-cd ~/expo-app-builder-workspace/server
+cd ~/expo-android-builder/server
 ./start-all-services.sh
 
 # Después de que inicie, escanea el QR code con Expo Go
@@ -412,14 +412,14 @@ cd ~/expo-app-builder-workspace/server
 # Opción 1: Ctrl+C en la terminal donde corre Expo (detiene todo automáticamente)
 
 # Opción 2: Script de detención
-cd ~/expo-app-builder-workspace/server
+cd ~/expo-android-builder/server
 ./stop-all-services.sh
 ```
 
 ### Servidor (solo backend):
 ```bash
 # Iniciar solo el servidor
-cd ~/expo-app-builder-workspace/server
+cd ~/expo-android-builder/server
 npm start
 
 # Ver logs en tiempo real
@@ -432,7 +432,7 @@ pkill -f "node server"
 ### App (solo frontend):
 ```bash
 # Iniciar solo la app
-cd ~/expo-app-builder-workspace/app
+cd ~/expo-android-builder/app
 npm start
 
 # Presionar 'a' para abrir en Android (requiere ADB)
@@ -479,7 +479,7 @@ NODE_ENV=development
 ## Estructura de Archivos
 
 ```
-expo-app-builder-workspace/
+expo-android-builder/
 ├── ESTADO_DESARROLLO.md          # Este documento
 ├── CLAUDE.md                     # Guía para Claude
 │

@@ -148,7 +148,7 @@ Todo sin necesidad de una computadora.
 
 ### Backend Implementado
 
-**Ubicación**: `/data/data/com.termux/files/home/expo-app-builder-server/`
+**Ubicación**: `/data/data/com.termux/files/home/expo-android-builder/server/`
 
 #### Archivos Core:
 - ✅ `server.js` - Entry point con Express + Socket.io
@@ -179,7 +179,7 @@ Todo sin necesidad de una computadora.
 
 ### Frontend Implementado
 
-**Ubicación**: `/data/data/com.termux/files/home/projects/expo-app-builder/`
+**Ubicación**: `/data/data/com.termux/files/home/expo-android-builder/app/`
 
 #### Archivos Core:
 - ✅ `App.js` - Root con NavigationContainer
@@ -513,7 +513,7 @@ cd /data/data/com.termux/files/home
 #### 2. Setup del Servidor
 
 ```bash
-cd expo-app-builder-server
+cd expo-android-builder/server
 
 # Instalar dependencias
 npm install
@@ -534,7 +534,7 @@ npm start
 #### 3. Setup de la App
 
 ```bash
-cd ../projects/expo-app-builder
+cd ../app
 
 # Instalar dependencias
 npm install
@@ -562,10 +562,10 @@ curl -X POST http://localhost:3001/api/projects \
 
 ## 📁 Estructura del Código
 
-### Backend (`expo-app-builder-server/`)
+### Backend (`server/`)
 
 ```
-expo-app-builder-server/
+server/
 ├── server.js                      # ⭐ Entry point
 ├── package.json
 ├── .env                           # Configuración (NO commitear)
@@ -591,10 +591,10 @@ expo-app-builder-server/
 └── __tests__/                    # 🚧 Fase 5
 ```
 
-### Frontend (`projects/expo-app-builder/`)
+### Frontend (`app/`)
 
 ```
-expo-app-builder/
+app/
 ├── App.js                        # ⭐ Root con navegación
 ├── package.json
 ├── app.json                      # Config de Expo
@@ -634,7 +634,7 @@ expo-app-builder/
 
 #### Paso 1: Backend - ClaudeService
 
-Crear `/expo-app-builder-server/src/services/ClaudeService.js`:
+Crear `/server/src/services/ClaudeService.js`:
 
 ```javascript
 const { spawn } = require('child_process');
@@ -709,7 +709,7 @@ module.exports = new ClaudeService();
 
 #### Paso 2: Backend - Rutas de Claude
 
-Crear `/expo-app-builder-server/src/routes/claude.js`:
+Crear `/server/src/routes/claude.js`:
 
 ```javascript
 const express = require('express');
@@ -747,7 +747,7 @@ module.exports = router;
 
 #### Paso 3: Backend - Registrar rutas
 
-En `/expo-app-builder-server/server.js`, agregar:
+En `/server/server.js`, agregar:
 
 ```javascript
 const claudeRouter = require('./src/routes/claude');
@@ -761,7 +761,7 @@ app.set('io', io);
 
 #### Paso 4: Frontend - Socket Service
 
-Crear `/projects/expo-app-builder/services/socket.js`:
+Crear `/app/services/socket.js`:
 
 ```javascript
 import io from 'socket.io-client';
@@ -829,7 +829,7 @@ export default new SocketService();
 
 #### Paso 5: Frontend - ClaudeCodeScreen
 
-Crear `/projects/expo-app-builder/screens/ClaudeCodeScreen.js`:
+Crear `/app/screens/ClaudeCodeScreen.js`:
 
 ```javascript
 import React, { useState, useEffect, useRef } from 'react';
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
 
 #### Paso 6: Agregar navegación
 
-En `/projects/expo-app-builder/App.js`, agregar la screen:
+En `/app/App.js`, agregar la screen:
 
 ```javascript
 import ClaudeCodeScreen from './screens/ClaudeCodeScreen';
@@ -1051,11 +1051,11 @@ En `HomeScreen.js`, al renderizar `ProjectCard`:
 
 ```bash
 # Backend
-cd expo-app-builder-server
+cd expo-android-builder/server
 npm start
 
 # App
-cd projects/expo-app-builder
+cd app
 npm start
 
 # Probar:
@@ -1188,7 +1188,7 @@ Ver `REPORTE_PRUEBAS.md` para resultados de Fase 1.
 #### Backend - Setup
 
 ```bash
-cd expo-app-builder-server
+cd expo-android-builder/server
 npm install --save-dev jest supertest
 ```
 
@@ -1236,7 +1236,7 @@ describe('ProjectService', () => {
 #### Frontend - Setup
 
 ```bash
-cd projects/expo-app-builder
+cd app
 npm install --save-dev jest @testing-library/react-native
 ```
 
@@ -1381,7 +1381,7 @@ Progreso General: ████████████░░░░░░░░ 6
 ps aux | grep "node server"
 
 # Si no está, iniciarlo
-cd expo-app-builder-server && npm start
+cd expo-android-builder/server && npm start
 ```
 
 **"Port 3001 already in use"**:
