@@ -252,18 +252,31 @@ class GitHubActionsService {
         throw new Error('GitHub token not configured. Set GITHUB_TOKEN in .env');
       }
 
-      const response = await this.apiClient.get(
-        `/repos/${this.repoOwner}/${this.repoName}/branches`,
-        { params: { per_page: 100 } }
-      );
+      const perPage = 100;
+      const maxPages = 20;
+      const branches = [];
 
-      const branches = response.data
-        .map((branch) => ({
-          name: branch.name,
-          sha: branch.commit?.sha,
-          protected: branch.protected
-        }))
-        .filter((branch) => branch.name.startsWith(pattern));
+      for (let page = 1; page <= maxPages; page += 1) {
+        const response = await this.apiClient.get(
+          `/repos/${this.repoOwner}/${this.repoName}/branches`,
+          { params: { per_page: perPage, page } }
+        );
+
+        const pageData = Array.isArray(response.data) ? response.data : [];
+        const filtered = pageData
+          .map((branch) => ({
+            name: branch.name,
+            sha: branch.commit?.sha,
+            protected: branch.protected
+          }))
+          .filter((branch) => branch.name.startsWith(pattern));
+
+        branches.push(...filtered);
+
+        if (pageData.length < perPage) {
+          break;
+        }
+      }
 
       return branches;
     } catch (error) {

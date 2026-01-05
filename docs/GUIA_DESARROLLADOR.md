@@ -363,6 +363,7 @@ Todo sin necesidad de una computadora.
 - ✅ `routes/githubActions.js` - Endpoints para staging, trigger y cleanup.
 - ✅ Rate limiting para staging (5 requests / 15 min).
 - ✅ Descarga de artifacts via API (stream ZIP).
+- ✅ Cleanup automático de branches al eliminar un proyecto (`build/<projectName>-*`).
 
 #### Frontend:
 - ✅ `BuildStatusScreen.js` con selector GitHub Actions.

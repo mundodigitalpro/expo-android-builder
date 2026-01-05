@@ -5,6 +5,7 @@ const { executeCommand } = require('../utils/executor');
 const { sanitizePath, validateProjectName } = require('../utils/validator');
 const { PROJECTS_BASE_PATH } = require('../config/constants');
 const logger = require('../utils/logger');
+const githubActionsService = require('./GitHubActionsService');
 
 class ProjectService {
   async createProject(projectName, template = 'blank') {
@@ -180,13 +181,70 @@ class ProjectService {
 
       await fs.rm(projectPath, { recursive: true, force: true });
 
-      logger.info('Project deleted successfully', { projectName });
+      let githubCleanup;
+      try {
+        githubCleanup = await this.cleanupGitHubBranches(projectName);
+      } catch (error) {
+        logger.warn('GitHub branch cleanup failed after project deletion', {
+          projectName,
+          error: error.message
+        });
+      }
 
-      return { message: `Project ${projectName} deleted successfully` };
+      logger.info('Project deleted successfully', { projectName, githubCleanup });
+
+      return { message: `Project ${projectName} deleted successfully`, githubCleanup };
     } catch (error) {
       logger.error('Failed to delete project', { projectName, error: error.message });
       throw error;
     }
+  }
+
+  async cleanupGitHubBranches(projectName) {
+    if (!githubActionsService.isConfigured()) {
+      logger.warn('Skipping GitHub branch cleanup (token not configured)', {
+        projectName
+      });
+      return { skipped: true, reason: 'GitHub token not configured' };
+    }
+
+    const prefix = `build/${projectName}-`;
+    let branches;
+
+    try {
+      branches = await githubActionsService.listBranches(prefix);
+    } catch (error) {
+      logger.warn('Failed to list GitHub branches for cleanup', {
+        projectName,
+        error: error.message
+      });
+      return { skipped: true, reason: 'Failed to list branches', prefix };
+    }
+
+    if (!branches.length) {
+      return { prefix, deleted: [], failed: [] };
+    }
+
+    const deleted = [];
+    const failed = [];
+
+    for (const branch of branches) {
+      try {
+        await githubActionsService.deleteBranch(branch.name);
+        deleted.push(branch.name);
+      } catch (error) {
+        failed.push({ name: branch.name, error: error.message });
+      }
+    }
+
+    if (failed.length) {
+      logger.warn('Some GitHub branches failed to delete', {
+        projectName,
+        failedCount: failed.length
+      });
+    }
+
+    return { prefix, deleted, failed };
   }
 
   async getProjectInfo(projectName) {
