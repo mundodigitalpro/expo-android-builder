@@ -36,9 +36,9 @@ COPY . .
 # Crear directorio para proyectos
 RUN mkdir -p /app-builder-projects
 
-# Crear usuario no-root
-RUN groupadd -r builder -g 1000 && \
-    useradd -r -u 1000 -g builder -m -d /home/builder -s /bin/bash builder
+# Crear usuario no-root (usar GID/UID 1001 para evitar conflictos)
+RUN groupadd -r builder -g 1001 && \
+    useradd -r -u 1001 -g builder -m -d /home/builder -s /bin/bash builder
 
 # Crear directorio para Claude config
 RUN mkdir -p /home/builder/.claude && \
