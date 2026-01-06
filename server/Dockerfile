@@ -36,21 +36,18 @@ COPY . .
 # Crear directorio para proyectos
 RUN mkdir -p /app-builder-projects
 
-# Crear usuario no-root (usar UID 1000 con grupo node existente)
-RUN useradd -r -u 1000 -g node -m -d /home/builder -s /bin/bash builder
+# Crear directorio para Claude config (usar usuario node existente)
+RUN mkdir -p /home/node/.claude && \
+    chown -R node:node /home/node/.claude
 
-# Crear directorio para Claude config
-RUN mkdir -p /home/builder/.claude && \
-    chown -R builder:node /home/builder/.claude
-
-# Cambiar permisos de directorios
-RUN chown -R builder:node /app /app-builder-projects
+# Cambiar permisos de directorios para usuario node
+RUN chown -R node:node /app /app-builder-projects
 
 # Exponer puerto
 EXPOSE 3001
 
 # Configurar Claude Code
-ENV CLAUDE_CONFIG_DIR=/home/builder/.claude
+ENV CLAUDE_CONFIG_DIR=/home/node/.claude
 ENV CLAUDE_NO_TELEMETRY=1
 
 # Variables de entorno por defecto (pueden ser sobrescritas por docker-compose)
@@ -59,7 +56,7 @@ ENV PORT=3001
 ENV HOST=0.0.0.0
 
 # Cambiar a usuario no-root
-USER builder
+USER node
 
 # Iniciar servidor
 CMD ["node", "server.js"]
