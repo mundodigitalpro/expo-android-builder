@@ -309,7 +309,60 @@ APK/AAB descargable
   - **Resultado:** ✅ Claude Code puede modificar archivos en todos los proyectos
   - **Nota:** Nuevos proyectos creados desde la app ya se crean con permisos correctos (node:node)
 
-### 4 Enero 2026 - 19:00
+### 6 Enero 2026 - 13:15
+- 🔧 **REFACTOR IMPORTANTE:** Externalización de Configuración Personal
+  - **Problema:** URLs y datos personales hardcodeados en el código impedían que otros usuarios pudieran instalar y usar la app fácilmente
+  - **Solución implementada:**
+    - Creado `app/config.js` con configuración centralizada
+    - App ahora usa `localhost:3001` como URL por defecto (configurable en Settings)
+    - Servicios del servidor usan variables de entorno `EXPO_OWNER` y `EXPO_PACKAGE_PREFIX`
+  - **Archivos modificados (9):**
+    - `app/config.js` ✨ NUEVO - Configuración centralizada
+    - `app/App.js` - Usa DEFAULT_SERVER_URL de config
+    - `app/services/api.js` - Usa config para fallbacks
+    - `app/utils/storage.js` - Usa config para defaults
+    - `app/screens/SettingsScreen.js` - URL VPS genérica placeholder
+    - `app/components/ServerUnavailableScreen.js` - Removido preset VPS hardcodeado
+    - `server/src/services/ProjectService.js` - Usa `process.env.EXPO_OWNER`
+    - `server/src/services/ProjectJobService.js` - Usa `process.env.EXPO_OWNER`
+    - `server/.env.example` - Añadidas nuevas variables
+  - **Nuevas variables de entorno (`.env`):**
+    ```env
+    EXPO_OWNER=josejordandev
+    EXPO_PACKAGE_PREFIX=com.josejordandev
+    ```
+  - **URLs eliminadas del código:**
+    - `builder.josejordan.dev` (12 ubicaciones)
+    - `46.62.214.102` (IP del VPS - fallback legacy)
+    - `josejordandev` como owner hardcodeado
+    - `com.josejordandev` como package prefix
+  - **Compatibilidad:**
+    - APK existente sigue funcionando (URL en AsyncStorage)
+    - Nuevas instalaciones empiezan en localhost
+    - Usuarios configuran su propia URL en Settings
+  - **Commit:** `2946b33`
+  - **Acción requerida en VPS:**
+    ```bash
+    # Añadir a server/.env:
+    EXPO_OWNER=josejordandev
+    EXPO_PACKAGE_PREFIX=com.josejordandev
+    
+    # Desplegar:
+    cd /home/josejordan/apps/builder && ./deploy.sh
+    ```
+
+- 📄 **DOCUMENTACIÓN:** Guía de Instalación para Nuevos Usuarios
+  - Creada `docs/GUIA_INSTALACION_REQUISITOS.md` - Guía exhaustiva con:
+    - 5 niveles de configuración (Local → VPS Producción)
+    - Requisitos obligatorios vs opcionales
+    - Creación de cuentas (GitHub, Expo, Claude)
+    - Generación de tokens y secretos
+    - Configuración de GitHub Actions
+    - Setup completo de VPS
+    - Checklists de verificación
+  - Actualizado `docs/INDICE_DOCUMENTACION.md` con referencia a nueva guía
+  - **Commits:** `e8835e5`, `2946b33`
+
 - 🚀 **HITO:** GitHub Actions Staging System (100% Funcional)
   - Capacidad de compilar proyectos de usuarios (e.g. `test-vps`) usando GitHub Actions.
   - Trigger desde App Móvil → VPS → GitHub → APK.
