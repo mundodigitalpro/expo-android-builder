@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEFAULT_SERVER_URL } from '../config';
 
 export const storage = {
   async setAuthToken(token) {
@@ -36,10 +37,10 @@ export const storage = {
 
   async getServerUrl() {
     try {
-      return await AsyncStorage.getItem('server_url') || 'https://builder.josejordan.dev';
+      return await AsyncStorage.getItem('server_url') || DEFAULT_SERVER_URL;
     } catch (error) {
       console.error('Error getting server URL:', error);
-      return 'https://builder.josejordan.dev';
+      return DEFAULT_SERVER_URL;
     }
   },
 };

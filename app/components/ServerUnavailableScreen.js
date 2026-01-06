@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import LoadingSpinner from './LoadingSpinner';
+import { DEFAULT_SERVER_URL } from '../config';
 
 export default function ServerUnavailableScreen({
   onRetry,
@@ -21,9 +22,8 @@ export default function ServerUnavailableScreen({
   const [isRetrying, setIsRetrying] = useState(false);
   const [customUrl, setCustomUrl] = useState(serverUrl || '');
 
-  const STARTUP_COMMAND = 'cd /data/data/com.termux/files/home/expo-app-builder-workspace/server && ./start-all-services.sh';
+  const STARTUP_COMMAND = 'cd ~/expo-android-builder/server && ./start-all-services.sh';
   const DEFAULT_URLS = {
-    production: 'https://builder.josejordan.dev',
     local: 'http://localhost:3001',
   };
 
@@ -145,14 +145,6 @@ export default function ServerUnavailableScreen({
         {/* Ajustes Rapidos */}
         <View style={styles.quickSettingsContainer}>
           <Text style={styles.instructionsTitle}>Ajustes Rapidos</Text>
-          <Pressable
-            style={styles.secondaryButton}
-            onPress={() => handleUsePreset(DEFAULT_URLS.production)}
-          >
-            <Text style={styles.secondaryButtonText}>
-              🌐 Usar VPS (HTTPS)
-            </Text>
-          </Pressable>
           <Pressable
             style={styles.secondaryButton}
             onPress={() => handleUsePreset(DEFAULT_URLS.local)}

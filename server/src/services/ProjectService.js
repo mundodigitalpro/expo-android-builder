@@ -69,17 +69,21 @@ class ProjectService {
       // Convert project name to valid package name (lowercase, no special chars)
       const packageName = projectName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
+      // Use environment variables for owner and package prefix
+      const expoOwner = process.env.EXPO_OWNER || 'expo-user';
+      const packagePrefix = process.env.EXPO_PACKAGE_PREFIX || 'com.example';
+
       // Update expo config
       appJson.expo = {
         ...appJson.expo,
-        owner: 'josejordandev',
+        owner: expoOwner,
         android: {
           ...appJson.expo.android,
-          package: `com.josejordandev.${packageName}`
+          package: `${packagePrefix}.${packageName}`
         },
         ios: {
           ...appJson.expo.ios,
-          bundleIdentifier: `com.josejordandev.${packageName}`
+          bundleIdentifier: `${packagePrefix}.${packageName}`
         }
       };
 

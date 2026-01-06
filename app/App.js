@@ -14,6 +14,7 @@ import ServerUnavailableScreen from './components/ServerUnavailableScreen';
 
 import { storage } from './utils/storage';
 import { healthCheck } from './services/api';
+import { DEFAULT_SERVER_URL } from './config';
 
 const Stack = createStackNavigator();
 
@@ -63,9 +64,9 @@ export default function App() {
 
       const serverUrl = await storage.getServerUrl();
       if (!serverUrl) {
-        await storage.setServerUrl('https://builder.josejordan.dev');
+        await storage.setServerUrl(DEFAULT_SERVER_URL);
       }
-      const resolvedServerUrl = serverUrl || 'https://builder.josejordan.dev';
+      const resolvedServerUrl = serverUrl || DEFAULT_SERVER_URL;
       setCurrentServerUrl(resolvedServerUrl);
       setStartupDetails(`URL: ${resolvedServerUrl}`);
 
@@ -109,29 +110,13 @@ export default function App() {
         }
       }
     }
-    if (serverUrl === 'http://46.62.214.102:3001') {
-      try {
-        const httpsUrl = 'https://builder.josejordan.dev';
-        setStartupMessage('Intentando servidor HTTPS...');
-        setStartupDetails(`URL: ${httpsUrl}`);
-        await healthCheck(httpsUrl);
-        await storage.setServerUrl(httpsUrl);
-        setCurrentServerUrl(httpsUrl);
-        setLastHealthError(null);
-        setServerAvailable(true);
-        console.log('✅ Server is available (migrated to HTTPS)');
-        return;
-      } catch (error) {
-        setLastHealthError(buildHealthError(error, 'https://builder.josejordan.dev'));
-      }
-    }
     setServerAvailable(false);
     console.log('❌ Server is not available after retries');
   };
 
   const handleRetry = async () => {
     const serverUrl = await storage.getServerUrl();
-    const resolvedServerUrl = serverUrl || 'https://builder.josejordan.dev';
+    const resolvedServerUrl = serverUrl || DEFAULT_SERVER_URL;
     setCurrentServerUrl(resolvedServerUrl);
     await checkServerAvailability(resolvedServerUrl);
   };

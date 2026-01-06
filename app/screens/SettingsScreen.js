@@ -11,7 +11,7 @@ import {
 import { storage } from '../utils/storage';
 import { healthCheck } from '../services/api';
 
-// Environment presets
+// Environment presets - users can customize these with their own URLs
 const ENVIRONMENTS = {
   LOCAL: {
     name: 'Local (Termux)',
@@ -21,8 +21,8 @@ const ENVIRONMENTS = {
   },
   PRODUCTION: {
     name: 'Producción (VPS)',
-    url: 'https://builder.josejordan.dev',
-    description: 'Backend en servidor remoto',
+    url: 'https://your-server.example.com',  // Change this to your server URL
+    description: 'Backend en servidor remoto (configurar URL)',
     icon: '☁️',
   },
   CUSTOM: {
