@@ -80,6 +80,31 @@ jobs:
         working-directory: ${{ github.event.inputs.project_path }}/android
         run: chmod +x gradlew
 
+      - name: 🔧 Configure Gradle repositories (fix Maven 403 errors)
+        working-directory: ${{ github.event.inputs.project_path }}/android
+        run: |
+          # Create init.gradle to add Google Maven as priority repository
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/init.gradle << 'INIT_EOF'
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral() {
+                      content {
+                          excludeGroupByRegex "com\\.facebook.*"
+                          excludeGroupByRegex "com\\.android.*"
+                      }
+                  }
+                  maven { url 'https://maven.google.com' }
+              }
+          }
+          INIT_EOF
+          
+          # Increase Gradle memory and enable parallel builds
+          echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m" >> gradle.properties
+          echo "org.gradle.parallel=true" >> gradle.properties
+          echo "org.gradle.daemon=false" >> gradle.properties
+
       - name: 📦 Bundle JavaScript (para APK standalone)
         working-directory: ${{ github.event.inputs.project_path }}
         run: |
