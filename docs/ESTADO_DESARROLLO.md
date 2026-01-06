@@ -299,6 +299,16 @@ APK/AAB descargable
     - `e3cc501`: Solución final - usar usuario 'node' existente
   - **Testing:** ✅ Comando `claude -p 'hola'` responde correctamente desde el contenedor
 
+- 🔧 **Fix adicional:** Permisos de escritura en proyectos existentes
+  - **Problema:** Proyectos creados antes del cambio a usuario `node` pertenecían a root
+  - **Error:** Claude Code no podía modificar archivos en `/app-builder-projects/app-test-vps`
+  - **Solución:** Cambio de ownership de proyectos existentes:
+    ```bash
+    docker compose exec -u root expo-builder chown -R node:node /app-builder-projects
+    ```
+  - **Resultado:** ✅ Claude Code puede modificar archivos en todos los proyectos
+  - **Nota:** Nuevos proyectos creados desde la app ya se crean con permisos correctos (node:node)
+
 ### 4 Enero 2026 - 19:00
 - 🚀 **HITO:** GitHub Actions Staging System (100% Funcional)
   - Capacidad de compilar proyectos de usuarios (e.g. `test-vps`) usando GitHub Actions.
