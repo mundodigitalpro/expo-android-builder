@@ -83,24 +83,33 @@ jobs:
       - name: 🔧 Patch Gradle for Maven 403 fix
         working-directory: ${{ github.event.inputs.project_path }}/android
         run: |
-          echo "📋 Original settings.gradle (first 25 lines):"
-          head -25 settings.gradle
+          echo "📋 Original settings.gradle:"
+          cat settings.gradle
+          echo ""
+          echo "---"
           
-          # Use sed to insert google() as first repository in pluginManagement
-          # This ensures Google Maven is checked before Maven Central
+          # CRITICAL FIX: Remove foojay-resolver-convention plugin lines
+          # This plugin tries to download gson from Maven Central during settings phase
+          # Since we configure Java via setup-java action, we don't need this plugin
+          sed -i '/foojay-resolver/d' settings.gradle
+          sed -i '/toolchainManagement/,/^}/d' settings.gradle
+          
+          # Insert google() as first repository in all repository blocks
           sed -i 's/repositories {/repositories {\n        google()/g' settings.gradle
           
-          echo ""
-          echo "📋 Patched settings.gradle (first 30 lines):"
-          head -30 settings.gradle
+          echo "📋 Patched settings.gradle:"
+          cat settings.gradle
           
-          # Gradle properties for better builds
+          # Disable toolchain auto-provisioning in gradle.properties
           cat >> gradle.properties << 'PROPS_EOF'
           org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m
           org.gradle.parallel=true
           org.gradle.daemon=false
-          org.gradle.caching=true
+          org.gradle.java.installations.auto-detect=false
+          org.gradle.java.installations.auto-download=false
           PROPS_EOF
+          
+          echo "✅ Gradle patches applied"
 
       - name: 📦 Bundle JavaScript (para APK standalone)
         working-directory: ${{ github.event.inputs.project_path }}
