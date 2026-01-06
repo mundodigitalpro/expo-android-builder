@@ -80,30 +80,27 @@ jobs:
         working-directory: ${{ github.event.inputs.project_path }}/android
         run: chmod +x gradlew
 
-      - name: 🔧 Configure Gradle repositories (fix Maven 403 errors)
+      - name: 🔧 Patch Gradle for Maven 403 fix
         working-directory: ${{ github.event.inputs.project_path }}/android
         run: |
-          # Create init.gradle to add Google Maven as priority repository
-          mkdir -p ~/.gradle
-          cat > ~/.gradle/init.gradle << 'INIT_EOF'
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral() {
-                      content {
-                          excludeGroupByRegex "com\\.facebook.*"
-                          excludeGroupByRegex "com\\.android.*"
-                      }
-                  }
-                  maven { url 'https://maven.google.com' }
-              }
-          }
-          INIT_EOF
+          echo "📋 Original settings.gradle (first 25 lines):"
+          head -25 settings.gradle
           
-          # Increase Gradle memory and enable parallel builds
-          echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m" >> gradle.properties
-          echo "org.gradle.parallel=true" >> gradle.properties
-          echo "org.gradle.daemon=false" >> gradle.properties
+          # Use sed to insert google() as first repository in pluginManagement
+          # This ensures Google Maven is checked before Maven Central
+          sed -i 's/repositories {/repositories {\n        google()/g' settings.gradle
+          
+          echo ""
+          echo "📋 Patched settings.gradle (first 30 lines):"
+          head -30 settings.gradle
+          
+          # Gradle properties for better builds
+          cat >> gradle.properties << 'PROPS_EOF'
+          org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m
+          org.gradle.parallel=true
+          org.gradle.daemon=false
+          org.gradle.caching=true
+          PROPS_EOF
 
       - name: 📦 Bundle JavaScript (para APK standalone)
         working-directory: ${{ github.event.inputs.project_path }}
