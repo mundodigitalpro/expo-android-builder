@@ -282,6 +282,23 @@ APK/AAB descargable
 
 ## Changelog
 
+### 6 Enero 2026 - 01:00
+- 🔧 **CRÍTICO:** Solución de permisos de Claude Code CLI en Docker VPS
+  - **Problema:** Claude Code CLI rechazaba `--dangerously-skip-permissions` al ejecutarse como root por seguridad
+  - **Error inicial:** "cannot be used with root/sudo privileges for security reasons"
+  - **Solución implementada:**
+    - Configurado usuario no-root en Dockerfile usando usuario `node` existente (UID 1000)
+    - Actualizado `CLAUDE_CONFIG_DIR` a `/home/node/.claude`
+    - Montaje de volumen: `/home/josejordan/.claude:/home/node/.claude:rw`
+    - Cambio de propietario de archivos `.claude.json` a josejordan (UID 1000)
+  - **Resultado:** Claude Code funciona correctamente en contenedor Docker sin errores de permisos
+  - **Commits:**
+    - `e719189`: Configuración inicial usuario builder (UID 1001)
+    - `49f010c`: Fix GID/UID a 1001 para evitar conflictos
+    - `df4de02`: Intento con usuario builder UID 1000
+    - `e3cc501`: Solución final - usar usuario 'node' existente
+  - **Testing:** ✅ Comando `claude -p 'hola'` responde correctamente desde el contenedor
+
 ### 4 Enero 2026 - 19:00
 - 🚀 **HITO:** GitHub Actions Staging System (100% Funcional)
   - Capacidad de compilar proyectos de usuarios (e.g. `test-vps`) usando GitHub Actions.
