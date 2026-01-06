@@ -10,6 +10,25 @@
 
 ### 🚀 Para Empezar
 
+#### 0. **GUIA_INSTALACION_REQUISITOS.md** ⭐ NUEVO - LEER PRIMERO
+**Para**: Cualquier persona que quiera clonar e instalar esta app desde cero
+**Contenido**:
+- Tabla completa de requisitos previos
+- 5 niveles de configuración (desde local hasta producción)
+- Cuentas necesarias: GitHub, Expo, Claude, VPS
+- Creación de tokens y secretos
+- Configuración de variables de entorno
+- Checklist de verificación por nivel
+- Solución de problemas comunes
+
+**Leer primero si**: Vas a instalar esta app por primera vez
+
+```bash
+cat docs/GUIA_INSTALACION_REQUISITOS.md
+```
+
+---
+
 #### 1. **INICIO_RAPIDO.md**
 **Para**: Usuarios que quieren usar la app
 **Contenido**:
@@ -300,6 +319,7 @@ grep -A30 "Fase 2" GUIA_DESARROLLADOR.md
 
 | Documento | Páginas | Propósito | Audiencia |
 |-----------|---------|-----------|-----------|
+| GUIA_INSTALACION_REQUISITOS.md | ~15 | Requisitos previos | Nuevos usuarios ⭐ |
 | INICIO_RAPIDO.md | ~5 | Guía de usuario | Usuarios finales |
 | GUIA_DESARROLLADOR.md | ~25 | Onboarding dev | Desarrolladores ⭐ |
 | EXPO_APP_BUILDER_PLAN.md | ~15 | Plan técnico | Dev + PMs |
