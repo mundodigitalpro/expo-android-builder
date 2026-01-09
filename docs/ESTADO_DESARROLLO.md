@@ -137,6 +137,8 @@ amp login
 
 ### Completado:
 - [x] Testing funcional completo ✅
+- [x] Fix: filtrado de mensajes duplicados (result, system init)
+- [x] Fix: persistencia de contexto entre mensajes (threads)
 - [ ] Merge a main (pendiente)
 
 ---

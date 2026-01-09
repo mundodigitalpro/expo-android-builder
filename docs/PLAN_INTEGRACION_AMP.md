@@ -972,5 +972,48 @@ export AMP_API_KEY=your-token-here
 
 ---
 
-**Última actualización**: 9 Enero 2026  
+---
+
+## Fixes Aplicados (9 Enero 2026)
+
+### Fix 1: Mensajes duplicados
+**Problema**: La respuesta de Amp aparecía dos veces.
+
+**Causa**: Amp envía tanto `assistant` como `result` con el mismo contenido.
+
+**Solución**: Filtrar mensajes `result` y `system init` en `AmpService.js`:
+```javascript
+case 'result':
+  // No emitir - es duplicado del assistant
+  logger.info('Amp result received (not emitting)');
+  break;
+```
+
+### Fix 2: Contexto no persistente
+**Problema**: Cada mensaje era una conversación nueva, Amp no recordaba el contexto.
+
+**Causa**: No se estaba capturando ni reenviando el Thread ID de Amp.
+
+**Solución**:
+1. Capturar `session_id` del mensaje `system init`
+2. Emitir evento `amp:thread` al frontend
+3. Frontend guarda `threadId` en estado
+4. Backend usa `amp threads continue <threadId>` para continuar
+
+**Código clave**:
+```javascript
+// Backend - capturar thread ID
+if (message.subtype === 'init' && message.session_id) {
+  socket.emit('amp:thread', { threadId: message.session_id });
+}
+
+// Backend - continuar thread
+if (options.threadId) {
+  args = ['threads', 'continue', options.threadId, '--execute', prompt, ...];
+}
+```
+
+---
+
+**Última actualización**: 10 Enero 2026  
 **Autor**: josejordandev (con asistencia de Amp)
