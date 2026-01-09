@@ -34,7 +34,7 @@ export default function ProjectCard({ project, onChatPress, onBuildPress, onDele
           style={[styles.actionButton, styles.chatButton]}
           onPress={() => onChatPress(project)}
         >
-          <Text style={styles.actionButtonText}>💬 Chat Claude</Text>
+          <Text style={styles.actionButtonText}>🤖 AI Chat</Text>
         </Pressable>
 
         <Pressable
