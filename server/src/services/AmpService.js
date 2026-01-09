@@ -166,6 +166,11 @@ class AmpService {
     // Amp envía diferentes tipos de mensajes en JSON
     switch (message.type) {
       case 'system':
+        // Ignorar mensajes system de tipo 'init' (solo metadata)
+        if (message.subtype === 'init') {
+          logger.info('Amp system init received', { sessionId, tools: message.tools?.length });
+          break;
+        }
         socket.emit('amp:output', {
           sessionId,
           type: 'system',
@@ -197,10 +202,12 @@ class AmpService {
         break;
 
       case 'result':
-        socket.emit('amp:output', {
+        // El resultado es un resumen final, no lo mostramos para evitar duplicación
+        // Solo logueamos para debug
+        logger.info('Amp result received (not emitting to avoid duplication)', {
           sessionId,
-          type: 'result',
-          content: message.result || message.content || JSON.stringify(message)
+          result: message.result?.substring?.(0, 100) || message.result,
+          isError: message.is_error
         });
         break;
 
