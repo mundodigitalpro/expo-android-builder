@@ -21,6 +21,7 @@ services:
       - GIT_USER_EMAIL=builder@josejordan.dev
       - CLAUDE_CONFIG_DIR=/home/node/.claude
       - CLAUDE_NO_TELEMETRY=1
+      - EXPO_TOKEN=${EXPO_TOKEN}
     volumes:
       - app-builder-projects:/app-builder-projects
       - /opt/android-sdk:/opt/android-sdk:rw
