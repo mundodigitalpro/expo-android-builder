@@ -1,6 +1,6 @@
 # Estado del Desarrollo - Expo Android Builder
-**Fecha:** 4 de Enero 2026
-**Última actualización:** 19:10
+**Fecha:** 9 de Enero 2026
+**Última actualización:** 22:30
 **Desarrollador:** josejordandev
 **Entorno:** Termux/Android + VPS Hetzner (Producción)
 
@@ -95,6 +95,47 @@ Claude Code              Versiones           Builds Android
 - Al eliminar un proyecto se intentan borrar sus branches `build/<projectName>-*` en GitHub (no bloquea el borrado local si falla).
 - Listado de branches en GitHub con paginacion para evitar limites de 100.
 - Script `build-android.sh` agregado para disparar el workflow `gradle-build-android.yml` via GitHub CLI.
+
+---
+
+## 🚀 NUEVO: Integración Amp Code (9 Ene 2026)
+
+**Estado:** ✅ Implementación completa - Pendiente testing
+
+**Rama:** `feature/amp-integration`
+
+**Descripción:** Integración de Amp Code como alternativa a Claude Code, permitiendo elegir entre ambos agentes de IA.
+
+### Archivos creados:
+- `server/src/services/AmpService.js` - Servicio para ejecutar Amp CLI
+- `server/src/routes/amp.js` - Endpoints REST para Amp
+- `app/screens/AICodeScreen.js` - Pantalla unificada con toggle Claude/Amp
+- `docs/PLAN_INTEGRACION_AMP.md` - Plan detallado de la feature
+
+### Archivos modificados:
+- `server/server.js` - Rutas y eventos WebSocket de Amp
+- `server/.env.example` - Variable AMP_API_KEY
+- `app/App.js` - Navegación a AICodeScreen
+- `app/services/api.js` - ampApi
+- `app/screens/SettingsScreen.js` - Selector de proveedor AI
+- `app/utils/storage.js` - Storage para AI provider
+
+### Características:
+- ⚡ Toggle entre Claude y Amp en tiempo real
+- 🔄 Streaming de respuestas via WebSocket
+- 🧵 Soporte para Amp Threads persistentes
+- ⚙️ Selector de proveedor por defecto en Settings
+- ✅ Detección automática de disponibilidad de Amp CLI
+
+### Requisitos:
+```bash
+npm install -g @sourcegraph/amp
+amp login
+```
+
+### Pendiente:
+- [ ] Testing funcional completo
+- [ ] Merge a main
 
 ---
 

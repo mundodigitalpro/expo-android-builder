@@ -43,4 +43,21 @@ export const storage = {
       return DEFAULT_SERVER_URL;
     }
   },
+
+  async setDefaultAIProvider(provider) {
+    try {
+      await AsyncStorage.setItem('default_ai_provider', provider);
+    } catch (error) {
+      console.error('Error saving AI provider:', error);
+    }
+  },
+
+  async getDefaultAIProvider() {
+    try {
+      return await AsyncStorage.getItem('default_ai_provider') || 'CLAUDE';
+    } catch (error) {
+      console.error('Error getting AI provider:', error);
+      return 'CLAUDE';
+    }
+  },
 };

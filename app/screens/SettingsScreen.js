@@ -7,9 +7,15 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Switch,
 } from 'react-native';
 import { storage } from '../utils/storage';
-import { healthCheck } from '../services/api';
+import { healthCheck, ampApi } from '../services/api';
+
+const AI_PROVIDERS = {
+  CLAUDE: { name: 'Claude Code', icon: '🤖', color: '#6366f1' },
+  AMP: { name: 'Amp Code', icon: '⚡', color: '#10b981' },
+};
 
 // Environment presets - users can customize these with their own URLs
 const ENVIRONMENTS = {
@@ -39,16 +45,22 @@ export default function SettingsScreen() {
   const [selectedEnvironment, setSelectedEnvironment] = useState('LOCAL');
   const [customUrl, setCustomUrl] = useState('');
   const [serverStatus, setServerStatus] = useState('unknown');
+  const [defaultAIProvider, setDefaultAIProvider] = useState('CLAUDE');
+  const [ampAvailable, setAmpAvailable] = useState(false);
 
   useEffect(() => {
     loadSettings();
+    checkAmpAvailability();
   }, []);
 
   const loadSettings = async () => {
     const token = await storage.getAuthToken();
     const url = await storage.getServerUrl();
+    const aiProvider = await storage.getDefaultAIProvider();
+    
     setAuthToken(token || '');
     setServerUrl(url || 'http://localhost:3001');
+    setDefaultAIProvider(aiProvider || 'CLAUDE');
 
     // Detect which environment is active
     if (url === ENVIRONMENTS.LOCAL.url) {
@@ -59,6 +71,27 @@ export default function SettingsScreen() {
       setSelectedEnvironment('CUSTOM');
       setCustomUrl(url || '');
     }
+  };
+
+  const checkAmpAvailability = async () => {
+    try {
+      const response = await ampApi.getStatus();
+      setAmpAvailable(response.data.available);
+    } catch (error) {
+      setAmpAvailable(false);
+    }
+  };
+
+  const handleAIProviderChange = async (provider) => {
+    if (provider === 'AMP' && !ampAvailable) {
+      Alert.alert(
+        'Amp no disponible',
+        'Amp CLI no está instalado o autenticado. Ejecuta "amp login" en Termux primero.'
+      );
+      return;
+    }
+    setDefaultAIProvider(provider);
+    await storage.setDefaultAIProvider(provider);
   };
 
   const handleEnvironmentChange = (env) => {
@@ -225,12 +258,62 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      {/* AI Provider Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Asistente de IA</Text>
+        <Text style={styles.subtitle}>
+          Selecciona el proveedor de IA por defecto
+        </Text>
+
+        {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
+          <Pressable
+            key={key}
+            style={[
+              styles.providerCard,
+              defaultAIProvider === key && styles.providerCardActive,
+              { borderColor: defaultAIProvider === key ? provider.color : '#e0e0e0' },
+            ]}
+            onPress={() => handleAIProviderChange(key)}
+          >
+            <Text style={styles.providerIcon}>{provider.icon}</Text>
+            <View style={styles.providerInfo}>
+              <Text style={[
+                styles.providerName,
+                defaultAIProvider === key && { color: provider.color },
+              ]}>
+                {provider.name}
+              </Text>
+              {key === 'AMP' && (
+                <Text style={[
+                  styles.providerStatus,
+                  { color: ampAvailable ? '#10b981' : '#ef4444' }
+                ]}>
+                  {ampAvailable ? '✓ Disponible' : '✗ No disponible'}
+                </Text>
+              )}
+            </View>
+            <View style={[
+              styles.radio,
+              defaultAIProvider === key && { borderColor: provider.color },
+            ]}>
+              {defaultAIProvider === key && (
+                <View style={[styles.radioDot, { backgroundColor: provider.color }]} />
+              )}
+            </View>
+          </Pressable>
+        ))}
+
+        <Text style={styles.helperText}>
+          Puedes cambiar entre Claude y Amp en cualquier momento desde la pantalla de chat.
+        </Text>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Información</Text>
-        <Text style={styles.infoText}>Expo Android Builder v2.0.0</Text>
-        <Text style={styles.infoText}>Fases 1-3 completadas (60%)</Text>
+        <Text style={styles.infoText}>Expo Android Builder v2.1.0</Text>
+        <Text style={styles.infoText}>Fases 1-3 completadas + Amp Integration</Text>
         <Text style={styles.infoText}>
-          ✅ CRUD Proyectos | ✅ Claude Code | ✅ EAS Build
+          ✅ CRUD Proyectos | ✅ Claude Code | ✅ Amp Code | ✅ EAS Build
         </Text>
       </View>
     </ScrollView>
@@ -414,5 +497,40 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+  },
+  providerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  providerCardActive: {
+    backgroundColor: '#f8fafc',
+  },
+  providerIcon: {
+    fontSize: 28,
+    marginRight: 12,
+  },
+  providerInfo: {
+    flex: 1,
+  },
+  providerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  providerStatus: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  helperText: {
+    fontSize: 13,
+    color: '#888',
+    fontStyle: 'italic',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

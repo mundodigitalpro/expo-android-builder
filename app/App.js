@@ -8,6 +8,7 @@ import HomeScreen from './screens/HomeScreen';
 import NewProjectScreen from './screens/NewProjectScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ClaudeCodeScreen from './screens/ClaudeCodeScreen';
+import AICodeScreen from './screens/AICodeScreen';
 import BuildStatusScreen from './screens/BuildStatusScreen';
 import LoadingSpinner from './components/LoadingSpinner';
 import ServerUnavailableScreen from './components/ServerUnavailableScreen';
@@ -191,6 +192,17 @@ export default function App() {
             options={{
               title: 'Chat con Claude',
               headerBackTitle: 'Atrás',
+            }}
+          />
+          <Stack.Screen
+            name="AICode"
+            component={AICodeScreen}
+            options={{
+              title: 'AI Assistant',
+              headerBackTitle: 'Atrás',
+              headerStyle: {
+                backgroundColor: '#1a1a2e',
+              },
             }}
           />
           <Stack.Screen

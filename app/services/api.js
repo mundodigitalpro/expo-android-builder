@@ -60,6 +60,12 @@ export const claudeApi = {
     api.post('/claude/cancel', { sessionId }),
 };
 
+export const ampApi = {
+  getStatus: () => api.get('/amp/status'),
+  cancel: (sessionId) => api.post('/amp/cancel', { sessionId }),
+  getSessions: () => api.get('/amp/sessions'),
+};
+
 export const buildsApi = {
   // EAS Cloud builds
   start: (projectPath, platform, profile, socketId) =>
