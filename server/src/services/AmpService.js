@@ -50,19 +50,26 @@ class AmpService {
       const sessionId = `amp-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
       // Argumentos para Amp CLI
-      // -x: Execute mode (non-interactive)
-      // --stream-json: Output como JSON stream
-      // --dangerously-allow-all: Skip permission prompts
-      const args = [
-        '--execute',
-        prompt,
-        '--stream-json',
-        '--dangerously-allow-all'
-      ];
-
-      // Si hay un threadId previo, continuar el thread
+      let args;
+      
       if (options.threadId) {
-        args.unshift('threads', 'continue', '--thread', options.threadId);
+        // Continuar thread existente
+        // amp threads continue <threadId> --execute "prompt" --stream-json --dangerously-allow-all
+        args = [
+          'threads', 'continue', options.threadId,
+          '--execute', prompt,
+          '--stream-json',
+          '--dangerously-allow-all'
+        ];
+        logger.info('Continuing Amp thread', { threadId: options.threadId });
+      } else {
+        // Nueva conversación
+        // amp --execute "prompt" --stream-json --dangerously-allow-all
+        args = [
+          '--execute', prompt,
+          '--stream-json',
+          '--dangerously-allow-all'
+        ];
       }
 
       logger.info('Starting Amp process', {
@@ -166,9 +173,18 @@ class AmpService {
     // Amp envía diferentes tipos de mensajes en JSON
     switch (message.type) {
       case 'system':
-        // Ignorar mensajes system de tipo 'init' (solo metadata)
-        if (message.subtype === 'init') {
-          logger.info('Amp system init received', { sessionId, tools: message.tools?.length });
+        // Capturar el thread ID de Amp del mensaje init
+        if (message.subtype === 'init' && message.session_id) {
+          logger.info('Amp system init received', { 
+            sessionId, 
+            ampThreadId: message.session_id,
+            tools: message.tools?.length 
+          });
+          // Enviar el thread ID al frontend para mantener contexto
+          socket.emit('amp:thread', {
+            sessionId,
+            threadId: message.session_id
+          });
           break;
         }
         socket.emit('amp:output', {

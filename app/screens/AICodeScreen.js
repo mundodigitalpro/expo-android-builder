@@ -82,6 +82,7 @@ export default function AICodeScreen({ route }) {
       socketService.on('amp:error', handleAmpError);
       socketService.on('amp:complete', handleAmpComplete);
       socketService.on('amp:started', handleAmpStarted);
+      socketService.on('amp:thread', handleAmpThread);
     } else {
       socketService.on('claude:output', handleClaudeOutput);
       socketService.on('claude:error', handleClaudeError);
@@ -94,6 +95,7 @@ export default function AICodeScreen({ route }) {
     socketService.off('amp:error');
     socketService.off('amp:complete');
     socketService.off('amp:started');
+    socketService.off('amp:thread');
     socketService.off('claude:output');
     socketService.off('claude:error');
     socketService.off('claude:complete');
@@ -144,7 +146,12 @@ export default function AICodeScreen({ route }) {
 
   const handleAmpStarted = (data) => {
     setSessionId(data.sessionId);
+  };
+
+  const handleAmpThread = (data) => {
+    // Guardar el thread ID de Amp para mantener contexto
     if (data.threadId) {
+      console.log('Amp thread ID received:', data.threadId);
       setThreadId(data.threadId);
     }
   };
