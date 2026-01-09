@@ -100,9 +100,9 @@ Claude Code              Versiones           Builds Android
 
 ## 🚀 NUEVO: Integración Amp Code (9 Ene 2026)
 
-**Estado:** ✅ Implementación completa - Pendiente testing
+**Estado:** ✅ Implementación completa y testeada
 
-**Rama:** `feature/amp-integration`
+**Rama:** `feature/amp-integration` (lista para merge)
 
 **Descripción:** Integración de Amp Code como alternativa a Claude Code, permitiendo elegir entre ambos agentes de IA.
 
@@ -118,6 +118,8 @@ Claude Code              Versiones           Builds Android
 - `app/App.js` - Navegación a AICodeScreen
 - `app/services/api.js` - ampApi
 - `app/screens/SettingsScreen.js` - Selector de proveedor AI
+- `app/screens/HomeScreen.js` - Navegación a AICode en lugar de ClaudeCode
+- `app/components/ProjectCard.js` - Botón "AI Chat"
 - `app/utils/storage.js` - Storage para AI provider
 
 ### Características:
@@ -133,9 +135,9 @@ npm install -g @sourcegraph/amp
 amp login
 ```
 
-### Pendiente:
-- [ ] Testing funcional completo
-- [ ] Merge a main
+### Completado:
+- [x] Testing funcional completo ✅
+- [ ] Merge a main (pendiente)
 
 ---
 
