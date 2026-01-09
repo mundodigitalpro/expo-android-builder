@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "activar-funcion",
+    "slug": "activar-funcion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "platforms": [
+      "android"
+    ],
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Esta aplicación necesita acceso a la cámara para controlar la linterna de tu dispositivo."
+        }
+      ]
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.josejordandev.activarfuncion",
+      "permissions": [
+        "CAMERA",
+        "FLASHLIGHT",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "owner": "josejordandev",
+    "extra": {
+      "eas": {
+        "projectId": "891b8427-4b87-4ae7-9195-eb71d5b955f8"
+      }
+    }
+  }
+}
