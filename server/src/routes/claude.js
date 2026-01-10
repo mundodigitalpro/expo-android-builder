@@ -7,7 +7,7 @@ const logger = require('../utils/logger');
 // POST /api/claude/execute
 router.post('/execute', async (req, res, next) => {
   try {
-    const { projectPath, prompt, socketId } = req.body;
+    const { projectPath, prompt, socketId, threadId } = req.body;
 
     // Validar que todos los campos requeridos estén presentes
     if (!projectPath || !prompt || !socketId) {
@@ -39,14 +39,16 @@ router.post('/execute', async (req, res, next) => {
     logger.info('Claude execute request received', {
       projectPath: sanitizedPath,
       socketId,
-      promptLength: validatedPrompt.length
+      promptLength: validatedPrompt.length,
+      threadId: threadId || 'new'
     });
 
     // Ejecutar comando de Claude
     const result = await ClaudeService.executeClaudeCommand(
       sanitizedPath,
       validatedPrompt,
-      socket
+      socket,
+      { threadId }
     );
 
     res.json(result);

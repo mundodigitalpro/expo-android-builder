@@ -87,6 +87,7 @@ export default function AICodeScreen({ route }) {
       socketService.on('claude:output', handleClaudeOutput);
       socketService.on('claude:error', handleClaudeError);
       socketService.on('claude:complete', handleClaudeComplete);
+      socketService.on('claude:thread', handleClaudeThread);
     }
   };
 
@@ -99,6 +100,7 @@ export default function AICodeScreen({ route }) {
     socketService.off('claude:output');
     socketService.off('claude:error');
     socketService.off('claude:complete');
+    socketService.off('claude:thread');
   };
 
   // Amp handlers
@@ -198,6 +200,13 @@ export default function AICodeScreen({ route }) {
     ]);
   };
 
+  const handleClaudeThread = (data) => {
+    if (data.threadId) {
+      console.log('Claude thread ID received:', data.threadId);
+      setThreadId(data.threadId);
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
@@ -232,7 +241,8 @@ export default function AICodeScreen({ route }) {
         const result = await claudeApi.execute(
           project.path,
           promptText,
-          socketService.getSocketId()
+          socketService.getSocketId(),
+          threadId
         );
         setSessionId(result.data.sessionId);
       }

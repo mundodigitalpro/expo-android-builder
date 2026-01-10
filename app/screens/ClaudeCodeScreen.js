@@ -19,6 +19,7 @@ export default function ClaudeCodeScreen({ route }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [threadId, setThreadId] = useState(null);
   const [connecting, setConnecting] = useState(true);
   const flatListRef = useRef(null);
 
@@ -33,6 +34,7 @@ export default function ClaudeCodeScreen({ route }) {
         socketService.on('claude:output', handleClaudeOutput);
         socketService.on('claude:error', handleClaudeError);
         socketService.on('claude:complete', handleClaudeComplete);
+        socketService.on('claude:thread', handleClaudeThread);
 
         setConnecting(false);
         console.log('Socket initialized successfully');
@@ -53,6 +55,7 @@ export default function ClaudeCodeScreen({ route }) {
       socketService.off('claude:output');
       socketService.off('claude:error');
       socketService.off('claude:complete');
+      socketService.off('claude:thread');
     };
   }, []);
 
@@ -94,6 +97,13 @@ export default function ClaudeCodeScreen({ route }) {
     ]);
   };
 
+  const handleClaudeThread = (data) => {
+    if (data.threadId) {
+      console.log('Claude thread ID received:', data.threadId);
+      setThreadId(data.threadId);
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
@@ -123,7 +133,8 @@ export default function ClaudeCodeScreen({ route }) {
       const result = await claudeApi.execute(
         project.path,
         promptText,
-        socketService.getSocketId()
+        socketService.getSocketId(),
+        threadId
       );
       setSessionId(result.data.sessionId);
     } catch (error) {

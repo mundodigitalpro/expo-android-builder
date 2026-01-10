@@ -32,7 +32,7 @@ class ClaudeService {
     }
   }
 
-  async executeClaudeCommand(projectPath, prompt, socket) {
+  async executeClaudeCommand(projectPath, prompt, socket, options = {}) {
     try {
       // Verificar disponibilidad de Claude CLI
       if (!this.claudeAvailable) {
@@ -49,14 +49,23 @@ class ClaudeService {
 
       // Ejecutar Claude CLI con spawn
       // -p: Print response and exit (non-interactive mode)
-      // --output-format text: Output as plain text for easy streaming
+      // --output-format stream-json: JSON streaming for parsing session_id
+      // --verbose: Required for stream-json
       // --dangerously-skip-permissions: Skip permission prompts (safe in controlled environment)
+      // --resume: Continue existing conversation if threadId provided
       const args = [
         '-p',
-        '--output-format', 'text',
-        '--dangerously-skip-permissions',
-        prompt
+        '--output-format', 'stream-json',
+        '--verbose',
+        '--dangerously-skip-permissions'
       ];
+
+      if (options.threadId) {
+        args.push('--resume', options.threadId);
+        logger.info('Resuming Claude thread', { threadId: options.threadId });
+      }
+
+      args.push(prompt);
 
       logger.info('Starting Claude process', {
         sessionId,
@@ -84,23 +93,33 @@ class ClaudeService {
         claudeProcess.stderr.setEncoding('utf8');
       }
 
-      // Stream stdout a través de WebSocket
+      // Buffer para acumular JSON parcial
+      let jsonBuffer = '';
+
+      // Stream stdout (JSON format)
       claudeProcess.stdout.on('data', (data) => {
-        const output = data.toString();
-        logger.info('Claude stdout received', {
-          sessionId,
-          length: output.length,
-          preview: output.substring(0, 100)
-        });
+        const chunk = data.toString();
+        jsonBuffer += chunk;
 
-        // Emitir al socket específico
-        socket.emit('claude:output', {
-          sessionId,
-          type: 'stdout',
-          content: output
-        });
+        // Intentar parsear líneas JSON completas
+        const lines = jsonBuffer.split('\n');
+        jsonBuffer = lines.pop() || '';
 
-        logger.info('Emitted claude:output event', { sessionId, socketId: socket.id });
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const parsed = JSON.parse(line);
+              this.handleClaudeMessage(parsed, sessionId, socket);
+            } catch (e) {
+              // Si no es JSON válido, enviar como texto
+              socket.emit('claude:output', {
+                sessionId,
+                type: 'text',
+                content: line
+              });
+            }
+          }
+        }
       });
 
       // Stream stderr a través de WebSocket
@@ -172,6 +191,80 @@ class ClaudeService {
         projectPath
       });
       throw error;
+    }
+  }
+
+  handleClaudeMessage(message, sessionId, socket) {
+    // Claude envía diferentes tipos de mensajes en JSON (igual que Amp)
+    switch (message.type) {
+      case 'system':
+        // Capturar el thread ID de Claude del mensaje init
+        if (message.subtype === 'init' && message.session_id) {
+          logger.info('Claude system init received', { 
+            sessionId, 
+            claudeThreadId: message.session_id,
+            tools: message.tools?.length 
+          });
+          // Enviar el thread ID al frontend para mantener contexto
+          socket.emit('claude:thread', {
+            sessionId,
+            threadId: message.session_id
+          });
+        }
+        break;
+
+      case 'assistant':
+        // Extraer contenido del mensaje del asistente
+        let assistantContent = '';
+        if (message.message?.content) {
+          if (Array.isArray(message.message.content)) {
+            assistantContent = message.message.content
+              .filter(c => c.type === 'text')
+              .map(c => c.text)
+              .join('');
+          } else {
+            assistantContent = message.message.content;
+          }
+        } else {
+          assistantContent = message.content || JSON.stringify(message);
+        }
+        
+        socket.emit('claude:output', {
+          sessionId,
+          type: 'assistant',
+          content: assistantContent
+        });
+        break;
+
+      case 'result':
+        // El resultado es un resumen final, no lo mostramos para evitar duplicación
+        logger.info('Claude result received (not emitting to avoid duplication)', {
+          sessionId,
+          result: message.result?.substring?.(0, 100) || message.result,
+          isError: message.is_error
+        });
+        break;
+
+      case 'tool_use':
+      case 'tool_result':
+        socket.emit('claude:output', {
+          sessionId,
+          type: 'tool',
+          tool: message.tool || message.name || 'unknown',
+          content: message.input || message.output || message.content || JSON.stringify(message)
+        });
+        break;
+
+      case 'user':
+        // Ignorar mensajes de usuario (eco)
+        break;
+
+      default:
+        socket.emit('claude:output', {
+          sessionId,
+          type: message.type || 'unknown',
+          content: typeof message === 'string' ? message : JSON.stringify(message)
+        });
     }
   }
 

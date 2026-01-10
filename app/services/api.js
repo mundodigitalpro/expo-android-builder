@@ -54,8 +54,8 @@ export const projectsApi = {
 };
 
 export const claudeApi = {
-  execute: (projectPath, prompt, socketId) =>
-    api.post('/claude/execute', { projectPath, prompt, socketId }),
+  execute: (projectPath, prompt, socketId, threadId = null) =>
+    api.post('/claude/execute', { projectPath, prompt, socketId, threadId }),
   cancel: (sessionId) =>
     api.post('/claude/cancel', { sessionId }),
 };
