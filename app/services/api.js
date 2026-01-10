@@ -67,6 +67,13 @@ export const geminiApi = {
     api.post('/gemini/cancel', { sessionId }),
 };
 
+export const codexApi = {
+  execute: (projectPath, prompt, socketId, threadId = null) =>
+    api.post('/codex/execute', { projectPath, prompt, socketId, threadId }),
+  cancel: (sessionId) =>
+    api.post('/codex/cancel', { sessionId }),
+};
+
 export const ampApi = {
   getStatus: () => api.get('/amp/status'),
   cancel: (sessionId) => api.post('/amp/cancel', { sessionId }),

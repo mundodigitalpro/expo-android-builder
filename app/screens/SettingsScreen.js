@@ -14,6 +14,8 @@ import { healthCheck, ampApi } from '../services/api';
 
 const AI_PROVIDERS = {
   CLAUDE: { name: 'Claude Code', icon: '🤖', color: '#6366f1' },
+  GEMINI: { name: 'Gemini CLI', icon: '✨', color: '#9c27b0' },
+  CODEX: { name: 'Codex CLI', icon: '🧠', color: '#f97316' },
   AMP: { name: 'Amp Code', icon: '⚡', color: '#10b981' },
 };
 
@@ -304,7 +306,7 @@ export default function SettingsScreen() {
         ))}
 
         <Text style={styles.helperText}>
-          Puedes cambiar entre Claude y Amp en cualquier momento desde la pantalla de chat.
+          Puedes cambiar entre Claude, Gemini, Codex y Amp en cualquier momento desde la pantalla de chat.
         </Text>
       </View>
 
@@ -313,7 +315,7 @@ export default function SettingsScreen() {
         <Text style={styles.infoText}>Expo Android Builder v2.1.0</Text>
         <Text style={styles.infoText}>Fases 1-3 completadas + Amp Integration</Text>
         <Text style={styles.infoText}>
-          ✅ CRUD Proyectos | ✅ Claude Code | ✅ Amp Code | ✅ EAS Build
+          ✅ CRUD Proyectos | ✅ Claude Code | ✅ Gemini CLI | ✅ Codex CLI | ✅ Amp Code | ✅ EAS Build
         </Text>
       </View>
     </ScrollView>

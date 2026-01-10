@@ -112,7 +112,20 @@ cat docs/PLAN_GITHUB_ACTIONS_STAGING.md
 cat docs/GUIA_INTEGRACION_GEMINI.md
 ```
 
-#### 6. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
+#### 6. **GUIA_INTEGRACION_CODEX.md** ⭐ NUEVO
+**Para**: Entender cómo funciona la integración de Codex CLI
+**Contenido**:
+- Arquitectura del servicio Codex
+- Parsing de eventos JSON (thread y item.completed)
+- Solución de problemas comunes
+
+**Leer primero si**: Vas a trabajar en el soporte de IA o Codex
+
+```bash
+cat docs/GUIA_INTEGRACION_CODEX.md
+```
+
+#### 7. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
 **Para**: Implementar builds de Android en VPS propio (uso privado)
 **Contenido**:
 - Arquitectura simplificada (sin sobreingeniería)
@@ -129,7 +142,7 @@ cat docs/GUIA_INTEGRACION_GEMINI.md
 cat docs/PLAN_MVP_VPS.md
 ```
 
-#### 6. **PLAN_MULTIUSUARIO_FUTURO.md** (Para Play Store)
+#### 8. **PLAN_MULTIUSUARIO_FUTURO.md** (Para Play Store)
 **Para**: Plan completo multi-usuario para publicar en Play Store
 **Contenido**:
 - Transformación arquitectónica completa
@@ -150,7 +163,7 @@ cat docs/PLAN_MULTIUSUARIO_FUTURO.md
 
 ### ✅ Testing y Resultados
 
-#### 7. **REPORTE_PRUEBAS.md**
+#### 9. **REPORTE_PRUEBAS.md**
 **Para**: Ver resultados de las pruebas realizadas
 **Contenido**:
 - 9 tests ejecutados (todos exitosos)
@@ -172,7 +185,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 
 ### 📖 READMEs de Código
 
-#### 8. **app/README.md**
+#### 10. **app/README.md**
 **Para**: Documentación de la app React Native
 **Contenido**:
 - Instalación de la app
@@ -185,7 +198,7 @@ cat /data/data/com.termux/files/home/REPORTE_PRUEBAS.md
 cat /data/data/com.termux/files/home/expo-android-builder/app/README.md
 ```
 
-#### 9. **server/README.md**
+#### 11. **server/README.md**
 **Para**: Documentación del servidor Node.js
 **Contenido**:
 - Instalación del servidor
@@ -198,7 +211,7 @@ cat /data/data/com.termux/files/home/expo-android-builder/app/README.md
 
 ### 🌍 Despliegue e Infraestructura
 
-#### 10. **DEPLOYMENT_VPS.md** ⭐ NUEVO
+#### 12. **DEPLOYMENT_VPS.md** ⭐ NUEVO
 **Para**: Configurar y desplegar en VPS (Producción)
 **Contenido**:
 - Guía de instalación de dependencias (Java, Android SDK, NDK)

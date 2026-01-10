@@ -1,6 +1,6 @@
 # Estado del Desarrollo - Expo Android Builder
-**Fecha:** 9 de Enero 2026
-**Última actualización:** 22:30
+**Fecha:** 12 de Enero 2026
+**Última actualización:** 12:00
 **Desarrollador:** josejordandev
 **Entorno:** Termux/Android + VPS Hetzner (Producción)
 
@@ -167,6 +167,27 @@ amp login
 
 ---
 
+## 🚀 NUEVO: Integración Codex CLI (12 Ene 2026)
+
+**Estado:** ✅ Implementación completa y desplegada
+
+**Rama:** `feature/amp-integration` (incluye cambios de Codex)
+
+**Descripción:** Integración de Codex CLI como proveedor adicional de IA, con soporte de streaming JSON y threads.
+
+### Características Principales:
+- 🧠 **Soporte Nativo:** Uso directo del CLI instalado en Termux.
+- 🧵 **Contexto Persistente:** Captura de `thread_id` y reanudación con `codex exec resume`.
+- ⚡ **Streaming JSON:** Parsing de eventos `thread.started` y `item.completed`.
+- 🎨 **UI Diferenciada:** Estilos específicos para Codex en la pantalla de chat.
+
+### Fix aplicado:
+- Se ajustó el parser para soportar `item.completed` con `item.type: "agent_message"` y `thread.started`, ya que Codex no emite el mismo esquema que Gemini/Amp.
+
+**Documentación Técnica:** `docs/GUIA_INTEGRACION_CODEX.md`
+
+---
+
 ## Resumen del Proyecto
 
 **Expo App Builder Workspace** es un sistema móvil de desarrollo que corre en Termux/Android, compuesto por:
@@ -181,7 +202,7 @@ React Native App (Expo Go)
     ↓ Authorization: Bearer token
 Node.js Server (Express + Socket.io)
     ↓ child_process.spawn()
-CLI Tools (Expo CLI, Claude Code, EAS CLI, Git)
+CLI Tools (Expo CLI, Claude Code, Codex CLI, Gemini CLI, Amp Code, EAS CLI, Git)
     ↓
 EAS Cloud (builds remotos)
     ↓

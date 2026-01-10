@@ -14,6 +14,7 @@ const localBuildsRouter = require('./src/routes/localBuilds');
 const githubActionsRouter = require('./src/routes/githubActions');
 const ampRouter = require('./src/routes/amp');
 const geminiRouter = require('./src/routes/gemini');
+const codexRouter = require('./src/routes/codex');
 
 const ampService = require('./src/services/AmpService');
 const { PROJECTS_BASE_PATH } = require('./src/config/constants');
@@ -47,6 +48,7 @@ app.use('/api/local-builds', authMiddleware, localBuildsRouter);
 app.use('/api/github-actions', authMiddleware, githubActionsRouter);
 app.use('/api/amp', authMiddleware, ampRouter);
 app.use('/api/gemini', authMiddleware, geminiRouter);
+app.use('/api/codex', authMiddleware, codexRouter);
 
 io.on('connection', (socket) => {
   logger.info('Client connected', { socketId: socket.id });

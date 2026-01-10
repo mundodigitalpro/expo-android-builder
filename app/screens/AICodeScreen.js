@@ -12,12 +12,13 @@ import {
   Switch,
 } from 'react-native';
 import socketService from '../services/socket';
-import { claudeApi, ampApi, geminiApi } from '../services/api';
+import { claudeApi, ampApi, geminiApi, codexApi } from '../services/api';
 
 const PROVIDERS = {
   CLAUDE: 'claude',
   AMP: 'amp',
   GEMINI: 'gemini',
+  CODEX: 'codex',
 };
 
 export default function AICodeScreen({ route }) {
@@ -84,6 +85,11 @@ export default function AICodeScreen({ route }) {
       socketService.on('amp:complete', handleAmpComplete);
       socketService.on('amp:started', handleAmpStarted);
       socketService.on('amp:thread', handleAmpThread);
+    } else if (provider === PROVIDERS.CODEX) {
+      socketService.on('codex:output', handleCodexOutput);
+      socketService.on('codex:error', handleCodexError);
+      socketService.on('codex:complete', handleCodexComplete);
+      socketService.on('codex:thread', handleCodexThread);
     } else if (provider === PROVIDERS.GEMINI) {
       socketService.on('gemini:output', handleGeminiOutput);
       socketService.on('gemini:error', handleGeminiError);
@@ -103,6 +109,10 @@ export default function AICodeScreen({ route }) {
     socketService.off('amp:complete');
     socketService.off('amp:started');
     socketService.off('amp:thread');
+    socketService.off('codex:output');
+    socketService.off('codex:error');
+    socketService.off('codex:complete');
+    socketService.off('codex:thread');
     socketService.off('claude:output');
     socketService.off('claude:error');
     socketService.off('claude:complete');
@@ -217,6 +227,56 @@ export default function AICodeScreen({ route }) {
     }
   };
 
+  // Codex handlers
+  const handleCodexOutput = (data) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString() + Math.random(),
+        type: data.type === 'assistant' ? 'ai' : data.type,
+        provider: 'codex',
+        content: data.content,
+        tool: data.tool,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleCodexError = (data) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString() + Math.random(),
+        type: 'error',
+        provider: 'codex',
+        content: data.content,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleCodexComplete = (data) => {
+    setLoading(false);
+    setSessionId(null);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString() + Math.random(),
+        type: 'system',
+        provider: 'codex',
+        content: `Codex ha terminado. (exit code: ${data.code})`,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleCodexThread = (data) => {
+    if (data.threadId) {
+      console.log('Codex thread ID received:', data.threadId);
+      setThreadId(data.threadId);
+    }
+  };
+
   // Gemini handlers
   const handleGeminiOutput = (data) => {
     setMessages((prev) => [
@@ -295,6 +355,14 @@ export default function AICodeScreen({ route }) {
           prompt: promptText,
           threadId: threadId,
         });
+      } else if (provider === PROVIDERS.CODEX) {
+        const result = await codexApi.execute(
+          project.path,
+          promptText,
+          socketService.getSocketId(),
+          threadId
+        );
+        setSessionId(result.data.sessionId);
       } else if (provider === PROVIDERS.GEMINI) {
         // Usar API REST para Gemini
         const result = await geminiApi.execute(
@@ -340,6 +408,8 @@ export default function AICodeScreen({ route }) {
     try {
       if (provider === PROVIDERS.AMP) {
         socketService.emit('amp:cancel', { sessionId });
+      } else if (provider === PROVIDERS.CODEX) {
+        await codexApi.cancel(sessionId);
       } else if (provider === PROVIDERS.GEMINI) {
         await geminiApi.cancel(sessionId);
       } else {
@@ -392,6 +462,8 @@ export default function AICodeScreen({ route }) {
     } else if (item.type === 'ai') {
       if (item.provider === 'amp') {
         messageStyle.push(styles.ampMessage);
+      } else if (item.provider === 'codex') {
+        messageStyle.push(styles.codexMessage);
       } else if (item.provider === 'gemini') {
         messageStyle.push(styles.geminiMessage);
       } else {
@@ -412,7 +484,13 @@ export default function AICodeScreen({ route }) {
       <View style={messageStyle}>
         {item.provider && item.type !== 'user' && (
           <Text style={styles.providerBadge}>
-            {item.provider === 'amp' ? '⚡ Amp' : item.provider === 'gemini' ? '✨ Gemini' : '🤖 Claude'}
+            {item.provider === 'amp'
+              ? '⚡ Amp'
+              : item.provider === 'codex'
+                ? '🧠 Codex'
+                : item.provider === 'gemini'
+                  ? '✨ Gemini'
+                  : '🤖 Claude'}
             {item.tool && ` • ${item.tool}`}
           </Text>
         )}
@@ -424,6 +502,7 @@ export default function AICodeScreen({ route }) {
   const getProviderInfo = () => {
     switch (provider) {
       case PROVIDERS.AMP: return { label: 'Amp', icon: '⚡' };
+      case PROVIDERS.CODEX: return { label: 'Codex', icon: '🧠' };
       case PROVIDERS.GEMINI: return { label: 'Gemini', icon: '✨' };
       default: return { label: 'Claude', icon: '🤖' };
     }
@@ -454,6 +533,13 @@ export default function AICodeScreen({ route }) {
         </Pressable>
 
         <Pressable 
+          style={[styles.providerButton, provider === PROVIDERS.CODEX && styles.providerButtonActive]}
+          onPress={() => switchProvider(PROVIDERS.CODEX)}
+          disabled={loading}>
+          <Text style={[styles.providerButtonText, provider === PROVIDERS.CODEX && styles.providerButtonTextActive]}>🧠 Codex</Text>
+        </Pressable>
+
+        <Pressable 
           style={[styles.providerButton, provider === PROVIDERS.AMP && styles.providerButtonActive]}
           onPress={() => switchProvider(PROVIDERS.AMP)}
           disabled={loading}>
@@ -463,9 +549,13 @@ export default function AICodeScreen({ route }) {
         </Pressable>
       </View>
 
-      {/* Thread indicator for Amp/Gemini */}
-      {(provider === PROVIDERS.AMP || provider === PROVIDERS.GEMINI || provider === PROVIDERS.CLAUDE) && threadId && (
-        <View style={[styles.threadBadge, provider === PROVIDERS.GEMINI && styles.threadBadgeGemini]}>
+      {/* Thread indicator */}
+      {(provider === PROVIDERS.AMP || provider === PROVIDERS.GEMINI || provider === PROVIDERS.CLAUDE || provider === PROVIDERS.CODEX) && threadId && (
+        <View style={[
+          styles.threadBadge,
+          provider === PROVIDERS.GEMINI && styles.threadBadgeGemini,
+          provider === PROVIDERS.CODEX && styles.threadBadgeCodex
+        ]}>
           <Text style={styles.threadText}>
             🧵 Thread: {threadId.slice(0, 12)}...
           </Text>
@@ -509,7 +599,8 @@ export default function AICodeScreen({ route }) {
       {loading && (
         <View style={[
           styles.loadingIndicator,
-          provider === PROVIDERS.AMP && styles.loadingIndicatorAmp
+          provider === PROVIDERS.AMP && styles.loadingIndicatorAmp,
+          provider === PROVIDERS.CODEX && styles.loadingIndicatorCodex
         ]}>
           <Text style={styles.loadingText}>
             {providerIcon} {providerLabel} está trabajando...
@@ -539,6 +630,7 @@ export default function AICodeScreen({ route }) {
           style={[
             styles.sendButton,
             provider === PROVIDERS.AMP && styles.sendButtonAmp,
+            provider === PROVIDERS.CODEX && styles.sendButtonCodex,
             (loading || !input.trim() || connecting) && styles.sendButtonDisabled,
           ]}
           onPress={sendMessage}
@@ -591,6 +683,9 @@ const styles = StyleSheet.create({
   },
   threadBadgeGemini: {
     backgroundColor: '#9c27b0',
+  },
+  threadBadgeCodex: {
+    backgroundColor: '#f97316',
   },
   threadText: {
     color: '#fff',
@@ -660,6 +755,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#10b981',
   },
+  codexMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#f97316',
+  },
   geminiMessage: {
     alignSelf: 'flex-start',
     backgroundColor: '#f3e5f5', // Light purple
@@ -716,6 +817,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1fae5',
     borderTopColor: '#10b981',
   },
+  loadingIndicatorCodex: {
+    backgroundColor: '#ffedd5',
+    borderTopColor: '#f97316',
+  },
   loadingText: {
     fontSize: 14,
     color: '#333',
@@ -758,6 +863,9 @@ const styles = StyleSheet.create({
   },
   sendButtonAmp: {
     backgroundColor: '#10b981',
+  },
+  sendButtonCodex: {
+    backgroundColor: '#f97316',
   },
   sendButtonDisabled: {
     opacity: 0.5,
