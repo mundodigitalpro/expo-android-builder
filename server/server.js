@@ -12,6 +12,12 @@ const claudeRouter = require('./src/routes/claude');
 const buildsRouter = require('./src/routes/builds');
 const localBuildsRouter = require('./src/routes/localBuilds');
 const githubActionsRouter = require('./src/routes/githubActions');
+const ampRouter = require('./src/routes/amp');
+const geminiRouter = require('./src/routes/gemini');
+
+const ampService = require('./src/services/AmpService');
+const { PROJECTS_BASE_PATH } = require('./src/config/constants');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +45,8 @@ app.use('/api/claude', authMiddleware, claudeRouter);
 app.use('/api/builds', authMiddleware, buildsRouter);
 app.use('/api/local-builds', authMiddleware, localBuildsRouter);
 app.use('/api/github-actions', authMiddleware, githubActionsRouter);
+app.use('/api/amp', authMiddleware, ampRouter);
+app.use('/api/gemini', authMiddleware, geminiRouter);
 
 io.on('connection', (socket) => {
   logger.info('Client connected', { socketId: socket.id });
@@ -49,6 +57,41 @@ io.on('connection', (socket) => {
 
   socket.on('ping', () => {
     socket.emit('pong', { timestamp: Date.now() });
+  });
+
+  // Amp Code WebSocket events
+  socket.on('amp:execute', async (data) => {
+    const { projectName, prompt, threadId } = data;
+    const projectPath = projectName 
+      ? path.join(PROJECTS_BASE_PATH, projectName)
+      : PROJECTS_BASE_PATH;
+
+    logger.info('Amp execute requested', { projectName, promptLength: prompt?.length });
+
+    try {
+      const result = await ampService.executeAmpCommand(
+        projectPath, 
+        prompt, 
+        socket,
+        { threadId }
+      );
+      socket.emit('amp:started', result);
+    } catch (error) {
+      logger.error('Amp execute error', { error: error.message });
+      socket.emit('amp:error', { 
+        type: 'error', 
+        content: error.message 
+      });
+    }
+  });
+
+  socket.on('amp:cancel', (data) => {
+    const { sessionId } = data;
+    logger.info('Amp cancel requested', { sessionId });
+    const stopped = ampService.stopSession(sessionId);
+    if (stopped) {
+      socket.emit('amp:cancelled', { sessionId });
+    }
   });
 });
 

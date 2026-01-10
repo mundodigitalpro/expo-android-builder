@@ -99,7 +99,20 @@ cat /data/data/com.termux/files/home/EXPO_APP_BUILDER_PLAN.md
 cat docs/PLAN_GITHUB_ACTIONS_STAGING.md
 ```
 
-#### 5. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
+#### 5. **GUIA_INTEGRACION_GEMINI.md** ⭐ NUEVO
+**Para**: Entender cómo funciona la integración de Gemini CLI
+**Contenido**:
+- Arquitectura del servicio Gemini
+- Parsing de JSON streams
+- Solución de problemas comunes
+
+**Leer primero si**: Vas a trabajar en el soporte de IA o Gemini
+
+```bash
+cat docs/GUIA_INTEGRACION_GEMINI.md
+```
+
+#### 6. **PLAN_MVP_VPS.md** ⭐ NUEVO (MVP Simplificado)
 **Para**: Implementar builds de Android en VPS propio (uso privado)
 **Contenido**:
 - Arquitectura simplificada (sin sobreingeniería)

@@ -1,26 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const ClaudeService = require('../services/ClaudeService');
-const { validateClaudePrompt, sanitizePath, validateSessionId } = require('../utils/validator');
+const GeminiService = require('../services/GeminiService');
+const { validatePrompt, sanitizePath, validateSessionId } = require('../utils/validator');
 const logger = require('../utils/logger');
 
-// POST /api/claude/execute
+// POST /api/gemini/execute
 router.post('/execute', async (req, res, next) => {
   try {
     const { projectPath, prompt, socketId, threadId } = req.body;
 
-    // Validar que todos los campos requeridos estén presentes
     if (!projectPath || !prompt || !socketId) {
       return res.status(400).json({
         error: 'projectPath, prompt, and socketId are required'
       });
     }
 
-    // Sanitizar path y validar prompt
     const sanitizedPath = sanitizePath(projectPath);
-    const validatedPrompt = validateClaudePrompt(prompt);
+    const validatedPrompt = validatePrompt(prompt);
 
-    // Obtener instancia de io
     const io = req.app.get('io');
     if (!io) {
       return res.status(500).json({
@@ -28,7 +25,6 @@ router.post('/execute', async (req, res, next) => {
       });
     }
 
-    // Obtener socket del cliente
     const socket = io.sockets.sockets.get(socketId);
     if (!socket) {
       return res.status(400).json({
@@ -36,15 +32,14 @@ router.post('/execute', async (req, res, next) => {
       });
     }
 
-    logger.info('Claude execute request received', {
+    logger.info('Gemini execute request received', {
       projectPath: sanitizedPath,
       socketId,
       promptLength: validatedPrompt.length,
       threadId: threadId || 'new'
     });
 
-    // Ejecutar comando de Claude
-    const result = await ClaudeService.executeClaudeCommand(
+    const result = await GeminiService.executeGeminiCommand(
       sanitizedPath,
       validatedPrompt,
       socket,
@@ -54,12 +49,12 @@ router.post('/execute', async (req, res, next) => {
     res.json(result);
 
   } catch (error) {
-    logger.error('Error in /execute endpoint', { error: error.message });
+    logger.error('Error in /gemini/execute endpoint', { error: error.message });
     next(error);
   }
 });
 
-// POST /api/claude/cancel
+// POST /api/gemini/cancel
 router.post('/cancel', async (req, res, next) => {
   try {
     const { sessionId } = req.body;
@@ -70,13 +65,11 @@ router.post('/cancel', async (req, res, next) => {
       });
     }
 
-    // Validar formato de sessionId
     validateSessionId(sessionId);
 
-    logger.info('Claude cancel request received', { sessionId });
+    logger.info('Gemini cancel request received', { sessionId });
 
-    // Detener sesión
-    const stopped = ClaudeService.stopSession(sessionId);
+    const stopped = GeminiService.stopSession(sessionId);
 
     if (stopped) {
       res.json({
@@ -91,7 +84,7 @@ router.post('/cancel', async (req, res, next) => {
     }
 
   } catch (error) {
-    logger.error('Error in /cancel endpoint', { error: error.message });
+    logger.error('Error in /gemini/cancel endpoint', { error: error.message });
     next(error);
   }
 });

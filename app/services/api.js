@@ -54,10 +54,23 @@ export const projectsApi = {
 };
 
 export const claudeApi = {
-  execute: (projectPath, prompt, socketId) =>
-    api.post('/claude/execute', { projectPath, prompt, socketId }),
+  execute: (projectPath, prompt, socketId, threadId = null) =>
+    api.post('/claude/execute', { projectPath, prompt, socketId, threadId }),
   cancel: (sessionId) =>
     api.post('/claude/cancel', { sessionId }),
+};
+
+export const geminiApi = {
+  execute: (projectPath, prompt, socketId, threadId = null) =>
+    api.post('/gemini/execute', { projectPath, prompt, socketId, threadId }),
+  cancel: (sessionId) =>
+    api.post('/gemini/cancel', { sessionId }),
+};
+
+export const ampApi = {
+  getStatus: () => api.get('/amp/status'),
+  cancel: (sessionId) => api.post('/amp/cancel', { sessionId }),
+  getSessions: () => api.get('/amp/sessions'),
 };
 
 export const buildsApi = {

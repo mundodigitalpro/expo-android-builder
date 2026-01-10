@@ -91,7 +91,7 @@ export default function HomeScreen({ navigation }) {
           renderItem={({ item }) => (
             <ProjectCard
               project={item}
-              onChatPress={(project) => navigation.navigate('ClaudeCode', { project })}
+              onChatPress={(project) => navigation.navigate('AICode', { project })}
               onBuildPress={(project) => navigation.navigate('BuildStatus', { project })}
               onDelete={handleDeleteProject}
             />

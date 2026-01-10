@@ -60,5 +60,6 @@ module.exports = {
   sanitizePath,
   validateProjectName,
   validateClaudePrompt,
+  validatePrompt: validateClaudePrompt,
   validateSessionId
 };
