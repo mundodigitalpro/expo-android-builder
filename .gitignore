@@ -20,6 +20,7 @@ jspm_packages/
 logs/
 *.log
 server.log
+server/nohup.out
 
 # Runtime data
 pids/
