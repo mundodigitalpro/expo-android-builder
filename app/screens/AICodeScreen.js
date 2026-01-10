@@ -12,11 +12,12 @@ import {
   Switch,
 } from 'react-native';
 import socketService from '../services/socket';
-import { claudeApi, ampApi } from '../services/api';
+import { claudeApi, ampApi, geminiApi } from '../services/api';
 
 const PROVIDERS = {
   CLAUDE: 'claude',
   AMP: 'amp',
+  GEMINI: 'gemini',
 };
 
 export default function AICodeScreen({ route }) {
@@ -83,6 +84,11 @@ export default function AICodeScreen({ route }) {
       socketService.on('amp:complete', handleAmpComplete);
       socketService.on('amp:started', handleAmpStarted);
       socketService.on('amp:thread', handleAmpThread);
+    } else if (provider === PROVIDERS.GEMINI) {
+      socketService.on('gemini:output', handleGeminiOutput);
+      socketService.on('gemini:error', handleGeminiError);
+      socketService.on('gemini:complete', handleGeminiComplete);
+      socketService.on('gemini:thread', handleGeminiThread);
     } else {
       socketService.on('claude:output', handleClaudeOutput);
       socketService.on('claude:error', handleClaudeError);
@@ -101,6 +107,10 @@ export default function AICodeScreen({ route }) {
     socketService.off('claude:error');
     socketService.off('claude:complete');
     socketService.off('claude:thread');
+    socketService.off('gemini:output');
+    socketService.off('gemini:error');
+    socketService.off('gemini:complete');
+    socketService.off('gemini:thread');
   };
 
   // Amp handlers
@@ -207,6 +217,55 @@ export default function AICodeScreen({ route }) {
     }
   };
 
+  // Gemini handlers
+  const handleGeminiOutput = (data) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString() + Math.random(),
+        type: 'ai',
+        provider: 'gemini',
+        content: data.content,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleGeminiError = (data) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString() + Math.random(),
+        type: 'error',
+        provider: 'gemini',
+        content: data.content,
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleGeminiComplete = () => {
+    setLoading(false);
+    setSessionId(null);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString() + Math.random(),
+        type: 'system',
+        provider: 'gemini',
+        content: 'Gemini ha terminado de procesar tu solicitud.',
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleGeminiThread = (data) => {
+    if (data.threadId) {
+      console.log('Gemini thread ID received:', data.threadId);
+      setThreadId(data.threadId);
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
@@ -236,6 +295,15 @@ export default function AICodeScreen({ route }) {
           prompt: promptText,
           threadId: threadId,
         });
+      } else if (provider === PROVIDERS.GEMINI) {
+        // Usar API REST para Gemini
+        const result = await geminiApi.execute(
+          project.path,
+          promptText,
+          socketService.getSocketId(),
+          threadId
+        );
+        setSessionId(result.data.sessionId);
       } else {
         // Usar API REST para Claude
         const result = await claudeApi.execute(
@@ -250,7 +318,7 @@ export default function AICodeScreen({ route }) {
       console.error(`Error executing ${provider}:`, error);
       const errorMessage =
         error.response?.data?.error ||
-        `No se pudo ejecutar ${provider === PROVIDERS.AMP ? 'Amp' : 'Claude'}.`;
+        `No se pudo ejecutar ${provider}.`;
       Alert.alert('Error', errorMessage);
       setLoading(false);
       setMessages((prev) => [
@@ -272,6 +340,8 @@ export default function AICodeScreen({ route }) {
     try {
       if (provider === PROVIDERS.AMP) {
         socketService.emit('amp:cancel', { sessionId });
+      } else if (provider === PROVIDERS.GEMINI) {
+        await geminiApi.cancel(sessionId);
       } else {
         await claudeApi.cancel(sessionId);
       }
@@ -293,13 +363,13 @@ export default function AICodeScreen({ route }) {
     }
   };
 
-  const switchProvider = (useAmp) => {
+  const switchProvider = (targetProvider) => {
     if (loading) {
       Alert.alert('Espera', 'Hay una sesión en progreso. Cancélala primero.');
       return;
     }
     
-    if (useAmp && !ampAvailable) {
+    if (targetProvider === PROVIDERS.AMP && !ampAvailable) {
       Alert.alert(
         'Amp no disponible',
         'Amp CLI no está instalado o no está autenticado. Ejecuta "amp login" en Termux.'
@@ -307,7 +377,7 @@ export default function AICodeScreen({ route }) {
       return;
     }
     
-    setProvider(useAmp ? PROVIDERS.AMP : PROVIDERS.CLAUDE);
+    setProvider(targetProvider);
     setMessages([]);
     setThreadId(null);
   };
@@ -320,9 +390,13 @@ export default function AICodeScreen({ route }) {
       messageStyle.push(styles.userMessage);
       textStyle.push(styles.userMessageText);
     } else if (item.type === 'ai') {
-      messageStyle.push(
-        item.provider === 'amp' ? styles.ampMessage : styles.claudeMessage
-      );
+      if (item.provider === 'amp') {
+        messageStyle.push(styles.ampMessage);
+      } else if (item.provider === 'gemini') {
+        messageStyle.push(styles.geminiMessage);
+      } else {
+        messageStyle.push(styles.claudeMessage);
+      }
     } else if (item.type === 'tool') {
       messageStyle.push(styles.toolMessage);
       textStyle.push(styles.toolMessageText);
@@ -338,7 +412,7 @@ export default function AICodeScreen({ route }) {
       <View style={messageStyle}>
         {item.provider && item.type !== 'user' && (
           <Text style={styles.providerBadge}>
-            {item.provider === 'amp' ? '⚡ Amp' : '🤖 Claude'}
+            {item.provider === 'amp' ? '⚡ Amp' : item.provider === 'gemini' ? '✨ Gemini' : '🤖 Claude'}
             {item.tool && ` • ${item.tool}`}
           </Text>
         )}
@@ -347,8 +421,15 @@ export default function AICodeScreen({ route }) {
     );
   };
 
-  const providerLabel = provider === PROVIDERS.AMP ? 'Amp' : 'Claude';
-  const providerIcon = provider === PROVIDERS.AMP ? '⚡' : '🤖';
+  const getProviderInfo = () => {
+    switch (provider) {
+      case PROVIDERS.AMP: return { label: 'Amp', icon: '⚡' };
+      case PROVIDERS.GEMINI: return { label: 'Gemini', icon: '✨' };
+      default: return { label: 'Claude', icon: '🤖' };
+    }
+  };
+
+  const { label: providerLabel, icon: providerIcon } = getProviderInfo();
 
   return (
     <KeyboardAvoidingView
@@ -358,30 +439,33 @@ export default function AICodeScreen({ route }) {
     >
       {/* Provider Toggle */}
       <View style={styles.providerToggle}>
-        <Text style={[
-          styles.providerLabel,
-          provider === PROVIDERS.CLAUDE && styles.activeProviderLabel
-        ]}>
-          🤖 Claude
-        </Text>
-        <Switch
-          value={provider === PROVIDERS.AMP}
-          onValueChange={switchProvider}
-          trackColor={{ false: '#6366f1', true: '#10b981' }}
-          thumbColor="#fff"
-          disabled={loading}
-        />
-        <Text style={[
-          styles.providerLabel,
-          provider === PROVIDERS.AMP && styles.activeProviderLabel
-        ]}>
-          ⚡ Amp {!ampAvailable && '(N/A)'}
-        </Text>
+        <Pressable 
+          style={[styles.providerButton, provider === PROVIDERS.CLAUDE && styles.providerButtonActive]}
+          onPress={() => switchProvider(PROVIDERS.CLAUDE)}
+          disabled={loading}>
+          <Text style={[styles.providerButtonText, provider === PROVIDERS.CLAUDE && styles.providerButtonTextActive]}>🤖 Claude</Text>
+        </Pressable>
+        
+        <Pressable 
+          style={[styles.providerButton, provider === PROVIDERS.GEMINI && styles.providerButtonActive]}
+          onPress={() => switchProvider(PROVIDERS.GEMINI)}
+          disabled={loading}>
+          <Text style={[styles.providerButtonText, provider === PROVIDERS.GEMINI && styles.providerButtonTextActive]}>✨ Gemini</Text>
+        </Pressable>
+
+        <Pressable 
+          style={[styles.providerButton, provider === PROVIDERS.AMP && styles.providerButtonActive]}
+          onPress={() => switchProvider(PROVIDERS.AMP)}
+          disabled={loading}>
+          <Text style={[styles.providerButtonText, provider === PROVIDERS.AMP && styles.providerButtonTextActive]}>
+            ⚡ Amp {!ampAvailable && '(N/A)'}
+          </Text>
+        </Pressable>
       </View>
 
-      {/* Thread indicator for Amp */}
-      {provider === PROVIDERS.AMP && threadId && (
-        <View style={styles.threadBadge}>
+      {/* Thread indicator for Amp/Gemini */}
+      {(provider === PROVIDERS.AMP || provider === PROVIDERS.GEMINI || provider === PROVIDERS.CLAUDE) && threadId && (
+        <View style={[styles.threadBadge, provider === PROVIDERS.GEMINI && styles.threadBadgeGemini]}>
           <Text style={styles.threadText}>
             🧵 Thread: {threadId.slice(0, 12)}...
           </Text>
@@ -476,15 +560,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    padding: 8,
     backgroundColor: '#1a1a2e',
-    gap: 12,
+    gap: 8,
   },
-  providerLabel: {
-    fontSize: 14,
+  providerButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  providerButtonActive: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  providerButtonText: {
+    fontSize: 13,
     color: '#888',
+    fontWeight: '500',
   },
-  activeProviderLabel: {
+  providerButtonTextActive: {
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -492,6 +588,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
     padding: 6,
     alignItems: 'center',
+  },
+  threadBadgeGemini: {
+    backgroundColor: '#9c27b0',
   },
   threadText: {
     color: '#fff',
@@ -560,6 +659,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#ecfdf5',
     borderWidth: 1,
     borderColor: '#10b981',
+  },
+  geminiMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f3e5f5', // Light purple
+    borderWidth: 1,
+    borderColor: '#9c27b0',
   },
   toolMessage: {
     alignSelf: 'flex-start',
