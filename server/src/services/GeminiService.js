@@ -162,58 +162,72 @@ class GeminiService {
   }
 
   handleGeminiMessage(message, sessionId, socket) {
-    // Adapting to Gemini's JSON output
-    // Assuming structure is similar to Claude/Amp or we map it
-    // Using generic fallbacks if specific types aren't matched
-    
-    // Note: Use 'gemini:thread' etc events
-    
-    if (message.type) {
-        switch (message.type) {
-            case 'system':
-                // Check for thread/session ID in system messages
-                 if (message.session_id) {
-                     socket.emit('gemini:thread', {
-                         sessionId,
-                         threadId: message.session_id
-                     });
-                 }
-                 break;
-            case 'assistant':
-                let content = message.content;
-                 if (typeof content === 'object') {
-                     content = JSON.stringify(content);
-                 }
+    if (!message.type) {
+         // Fallback for untyped messages
+         socket.emit('gemini:output', {
+             sessionId,
+             type: 'text',
+             content: JSON.stringify(message)
+         });
+         return;
+    }
+
+    switch (message.type) {
+        case 'init':
+             // Capture thread/session ID
+             if (message.session_id) {
+                 logger.info('Gemini session init', { 
+                    sessionId, 
+                    geminiThreadId: message.session_id 
+                 });
+                 socket.emit('gemini:thread', {
+                     sessionId,
+                     threadId: message.session_id
+                 });
+             }
+             break;
+
+        case 'message':
+            if (message.role === 'user') {
+                // Ignore user echo
+                return;
+            }
+            if (message.role === 'assistant') {
                 socket.emit('gemini:output', {
                     sessionId,
                     type: 'assistant',
-                    content: content || ''
+                    content: message.content || ''
                 });
-                break;
-            case 'tool': // Hypothetical, need to verify Gemini output
-            case 'tool_use':
-                 socket.emit('gemini:output', {
-                    sessionId,
-                    type: 'tool',
-                    tool: message.name || 'unknown',
-                    content: message.input || message.output || JSON.stringify(message)
-                 });
-                 break;
-            default:
-                // Pass through
-                 socket.emit('gemini:output', {
-                    sessionId,
-                    type: message.type,
-                    content: message.content || JSON.stringify(message)
-                });
-        }
-    } else {
-        // Fallback for untyped messages
-        socket.emit('gemini:output', {
-            sessionId,
-            type: 'text',
-            content: JSON.stringify(message)
-        });
+            }
+            break;
+
+        case 'tool_call':
+             socket.emit('gemini:output', {
+                sessionId,
+                type: 'tool',
+                tool: message.tool?.name || message.function?.name || 'unknown',
+                content: `Calling tool: ${message.tool?.name || message.function?.name}...`
+             });
+             break;
+        
+        case 'tool_result':
+             // Optionally show tool results
+             // For now, maybe just log or show a small confirmation
+             break;
+
+        case 'result':
+             // Final stats, ignore for chat stream
+             logger.info('Gemini command finished', { stats: message.stats });
+             break;
+
+        default:
+            // Log unknown types but don't spam chat unless necessary
+            logger.debug('Unknown Gemini message type', { type: message.type });
+            // socket.emit('gemini:output', {
+            //    sessionId,
+            //    type: 'text',
+            //    content: JSON.stringify(message)
+            // });
     }
   }
 
