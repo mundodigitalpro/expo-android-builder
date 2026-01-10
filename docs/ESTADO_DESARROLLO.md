@@ -143,6 +143,30 @@ amp login
 
 ---
 
+## 🚀 NUEVO: Integración Gemini CLI (10 Ene 2026)
+
+**Estado:** ✅ Implementación completa y desplegada
+
+**Rama:** `feature/amp-integration` (incluye cambios de Gemini)
+
+**Descripción:** Integración nativa de Gemini CLI como tercer proveedor de IA, sumándose a Claude y Amp.
+
+### Características Principales:
+- ✨ **Soporte Nativo:** Uso directo de la CLI instalada en el sistema.
+- 🟣 **UI Diferenciada:** Tema visual púrpura específico para Gemini.
+- 🧵 **Contexto Persistente:** Manejo automático de `session_id` para hilos de conversación.
+- ⚡ **Streaming JSON:** Parsing robusto de la salida `stream-json` de la CLI.
+- 🔄 **Selector Multi-Proveedor:** UI actualizada para alternar fácilmente entre Claude, Gemini y Amp.
+
+### Componentes Técnicos:
+- `GeminiService.js`: Adaptador de proceso y parser de protocolo.
+- `routes/gemini.js`: API REST para el frontend.
+- `AICodeScreen.js`: Actualización mayor para soportar arquitectura multi-proveedor.
+
+**Documentación Técnica:** `docs/GUIA_INTEGRACION_GEMINI.md`
+
+---
+
 ## Resumen del Proyecto
 
 **Expo App Builder Workspace** es un sistema móvil de desarrollo que corre en Termux/Android, compuesto por:
